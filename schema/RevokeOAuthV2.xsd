@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="RevokeOAuthV2">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='0' maxOccurs='1' name="AppId" type='propertyBean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="EndUserId" type='propertyBean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="RevokeBeforeTimestamp" type='propertyBean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Cascade" type='xs:boolean'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

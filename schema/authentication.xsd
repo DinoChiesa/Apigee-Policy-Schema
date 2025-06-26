@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           xmlns:xerces="http://xerces.apache.org"
+           xmlns:saxon="http://saxon.sf.net/"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:complexType name="authentication">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="HeaderName" type="authHeaderName"/>
+      <xs:element name="GoogleAccessToken" type="authGoogleAccessToken"/>
+      <xs:element name="GoogleIDToken" type="authGoogleIdToken"/>
+    </xs:choice>
+    <xs:assert test="count(GoogleIDToken) le 1 and
+                     count(GoogleAccessToken) le 1 and
+                     count(HeaderName) le 1"/>
+    <xs:assert test="count(GoogleIDToken) = 1 or
+                     count(GoogleAccessToken) = 1"/>
+
+  </xs:complexType>
+
+  <xs:complexType name="authGoogleAccessToken">
+    <xs:all>
+      <xs:element minOccurs='1' name="Scopes" type="authScopes"/>
+      <xs:element minOccurs='0' name="LifetimeInSeconds" type="xs:integer"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="authGoogleIdToken">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="IncludeEmail" type="xs:boolean"/>
+      <xs:element minOccurs='1' maxOccurs='1' name="Audience" type="idTokenAudience"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="authScopes">
+    <xs:sequence>
+      <xs:element name="Scope" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="authHeaderName">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" type="nonEmptyString"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="idTokenAudience">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" type="nonEmptyString"/>
+        <xs:attribute name="useTargetUrl" type="xs:boolean"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

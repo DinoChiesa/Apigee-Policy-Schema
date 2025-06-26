@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           xmlns:xerces="http://xerces.apache.org"
+           xmlns:saxon="http://saxon.sf.net/"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:complexType name="jwtEncryptionAlgorithmPair">
+    <xs:sequence>
+      <xs:element name="Key" type="KeyEncryptingAlgType"/>
+      <xs:element name="Content" type="ContentEncryptingAlgType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- allows specifying ONE algorithm, which is required in GenerateJWT -->
+  <xs:simpleType name="jwtSigningAlgorithm">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="RS256"/>
+      <xs:enumeration value="RS384"/>
+      <xs:enumeration value="RS512"/>
+      <xs:enumeration value="PS256"/>
+      <xs:enumeration value="PS384"/>
+      <xs:enumeration value="PS512"/>
+      <xs:enumeration value="HS256"/>
+      <xs:enumeration value="HS384"/>
+      <xs:enumeration value="HS512"/>
+      <xs:enumeration value="ES256"/>
+      <xs:enumeration value="ES384"/>
+      <xs:enumeration value="ES512"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- allows specifying one or more algorithms, which is possible in VerifyJWT -->
+  <xs:simpleType name="jwtSigningAlgorithmSpec">
+    <xs:restriction base="xs:string">
+      <!-- allow multiple algorithms -->
+      <xs:assertion test="every $alg in tokenize(., '\s*,\s*')
+                       satisfies $alg = ('RS256', 'RS384', 'RS512',
+                       'PS256', 'PS384', 'PS512',
+                       'HS256', 'HS384', 'HS512',
+                       'ES256', 'ES384', 'ES512') "/>
+      <!-- as long as all are in the same family -->
+      <xs:assertion test=" count(distinct-values(tokenize(., '\s*,\s*')/substring(., 1, 2))) le 1 "/>
+      </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="KeyEncryptingAlgType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="dir"/>
+      <xs:enumeration value="RSA-OAEP-256"/>
+      <xs:enumeration value="A128KW"/>
+      <xs:enumeration value="A192KW"/>
+      <xs:enumeration value="A256KW"/>
+      <xs:enumeration value="A128GCMKW"/>
+      <xs:enumeration value="A192GCMKW"/>
+      <xs:enumeration value="A256GCMKW"/>
+      <xs:enumeration value="PBES2-HS256+A128KW"/>
+      <xs:enumeration value="PBES2-HS384+A192KW"/>
+      <xs:enumeration value="PBES2-HS512+A256KW"/>
+      <xs:enumeration value="ECDH-ES"/>
+      <xs:enumeration value="ECDH-ES+A128KW"/>
+      <xs:enumeration value="ECDH-ES+A192KW"/>
+      <xs:enumeration value="ECDH-ES+A256KW"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ContentEncryptingAlgType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="A128CBC-HS256"/>
+      <xs:enumeration value="A192CBC-HS384"/>
+      <xs:enumeration value="A256CBC-HS512"/>
+      <xs:enumeration value="A128GCM"/>
+      <xs:enumeration value="A192GCM"/>
+      <xs:enumeration value="A256GCM"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="jwtSecretKeyType">
+    <xs:sequence>
+      <xs:element name="Value" type="jwtSecretKeyValue"/>
+    </xs:sequence>
+    <xs:attribute name="encoding" type="jwtSecretKeyEncoding"/>
+  </xs:complexType>
+
+  <xs:simpleType name="jwtSecretKeyEncoding">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="hex"/>
+      <xs:enumeration value="base16"/>
+      <xs:enumeration value="base64"/>
+      <xs:enumeration value="base64url"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="jwtSecretKeyValue">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" use="required" type="xs:NCName"/>
+        <xs:assert test=". = ''" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="jwtPublicKeyType">
+    <xs:choice>
+      <xs:element name="Value" type="jwtValueOrRef"/>
+      <xs:element name="Certificate" type="jwtValueOrRef"/>
+      <xs:element name="JWKS" type="JWKS"/>
+    </xs:choice>
+    <xs:assert test="(count(Value) = 1 and count(Certificate) = 0 and count(JWKS) = 0) or
+                     (count(Value) = 0 and count(Certificate) = 1 and count(JWKS) = 0) or
+                     (count(Value) = 0 and count(Certificate) = 0 and count(JWKS) = 1)"/>
+  </xs:complexType>
+
+  <xs:complexType name="JWKS">
+    <xs:attribute name="uri" type="xs:anyURI"/>
+    <xs:attribute name="uriRef" type="xs:NCName"/>
+  </xs:complexType>
+
+  <xs:complexType name="jwtPrivateKeyType">
+    <xs:all>
+      <xs:element name="Value" type="refOnly" minOccurs='1'/>
+      <xs:element name="Password" type="refOnly" minOccurs="0"/>
+    </xs:all>
+    <xs:assert test="count(Value) = 1 and count(Password) le 1" />
+  </xs:complexType>
+
+  <xs:complexType name="jwtValueOrRef">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" type="xs:NCName"/>
+        <xs:assert test=". = '' or @ref = ''" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="jwtTimeIntervalType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" type="xs:NCName"/>
+        <xs:assert test="string-length($value) = 0 or matches($value, '^\d+[smhd]$')"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="jwtAdditionalClaims">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Claim" type='jwtClaim'/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="jwtClaim">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" use="required" type="xs:NCName"/>
+        <xs:attribute name="ref" type="xs:NCName"/>
+        <xs:attribute name="type" type="xs:NCName"/>
+        <xs:attribute name="array" type="xs:boolean"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

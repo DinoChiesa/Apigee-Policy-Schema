@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="cacheCommon.xsd"/>
+
+  <xs:element name="ResponseCache">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" maxOccurs='1' name="CacheResource" type="xs:NCName"/>
+            <xs:element minOccurs='1' maxOccurs='1' name="CacheKey" type='cacheKey'/>
+            <xs:element minOccurs='1' maxOccurs='1' name="Scope" type="cacheScopeType"/>
+            <xs:element minOccurs="0" maxOccurs='1' name="UseAcceptHeader" type='xs:boolean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ExpirySettings" type='cacheExpirySettings'/>
+            <xs:element minOccurs="0" maxOccurs='1' name="ExcludeErrorResponse" type='rcExcludeError'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="SkipCacheLookup" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="SkipCachePopulation" type='xs:string'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="rcExcludeError">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value=""/>
+      <xs:enumeration value="true"/>
+      <xs:enumeration value="false"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

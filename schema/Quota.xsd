@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:element name="Quota">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='0' maxOccurs='1' name="Allow" type="qAllow"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Distributed" type='xs:boolean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Synchronous" type='xs:boolean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="MessageWeight" type="refOnly"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="AsynchronousConfiguration" type="qAsynchronousConfiguration"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="PreciseAtSecondsLevel" type='xs:boolean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Identifier" type='propertyBean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Interval" type='qInterval' />
+            <xs:element minOccurs='0' maxOccurs='1' name="TimeUnit" type='qTimeUnit' />
+            <xs:element minOccurs='0' maxOccurs='1' name="StartTime" type='xs:string' />
+            <xs:element minOccurs='0' maxOccurs='1' name="UseQuotaConfigInAPIProduct" type='qUseQuotaConfigInAPIProduct'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="SharedName" type="nonEmptyString"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="EnforceOnly" type="xs:boolean"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="CountOnly" type="xs:boolean"/>
+          </xs:all>
+          <xs:attribute name="type" type="qType"/>
+
+          <xs:assert test="if (count(SharedName) = 1)
+                           then ((count(CountOnly) = 1 and (count(EnforceOnly) = 0 or not(EnforceOnly))) or
+                            ((count(CountOnly) = 0 or not(CountOnly)) and count(EnforceOnly) = 1))
+                           else ((count(CountOnly) = 0 or not(CountOnly)) and (count(EnforceOnly) = 0 or not(EnforceOnly)))"/>
+
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="qType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="calendar"/>
+      <xs:enumeration value="flexi"/>
+      <xs:enumeration value="rollingwindow"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="qAllow">
+    <xs:attribute name="count" type="xs:integer"/>
+    <xs:attribute name="countRef"/>
+  </xs:complexType>
+
+  <xs:simpleType name="qIntervalFormatType">
+    <xs:restriction base="xs:string">
+      <xs:assertion test="($value = '') or matches($value, '[1-9]\d*')"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="qInterval">
+    <xs:simpleContent>
+      <xs:restriction base="propertyBean">
+        <xs:simpleType>
+          <xs:restriction base="qIntervalFormatType" />
+        </xs:simpleType>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="qTimeUnitFormatType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value=""/>
+      <xs:enumeration value="minute"/>
+      <xs:enumeration value="hour"/>
+      <xs:enumeration value="day"/>
+      <xs:enumeration value="week"/>
+      <xs:enumeration value="month"/>
+      <xs:enumeration value="year"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="qTimeUnit">
+    <xs:simpleContent>
+      <xs:restriction base="propertyBean">
+        <xs:simpleType>
+          <xs:restriction base="qTimeUnitFormatType" />
+        </xs:simpleType>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="qUseQuotaConfigInAPIProduct">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="DefaultConfig" type='qDefaultConfig'/>
+    </xs:all>
+    <xs:attribute name="stepName" use="required" type="xs:NCName"/>
+  </xs:complexType>
+
+  <xs:complexType name="qDefaultConfig">
+    <xs:all>
+      <xs:element minOccurs='1' maxOccurs='1' name="Allow" type='xs:integer'/>
+      <xs:element minOccurs='1' maxOccurs='1' name="Interval" type='xs:integer'/>
+      <xs:element minOccurs='1' maxOccurs='1' name="TimeUnit" type='qTimeUnitFormatType'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="qAsynchronousConfiguration">
+    <xs:all>
+      <xs:element minOccurs='1' maxOccurs='1' name="SyncIntervalInSeconds" type='xs:integer'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="SyncMessageCount" type='xs:integer'/>
+    </xs:all>
+  </xs:complexType>
+
+</xs:schema>

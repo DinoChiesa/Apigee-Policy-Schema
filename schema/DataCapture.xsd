@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="patterns.xsd"/>
+  <xs:include schemaLocation="xmlNamespaces.xsd"/>
+
+  <xs:element name="DataCapture">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" maxOccurs='1' name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element minOccurs='1' maxOccurs="unbounded" name='Capture' type="dcCapture"/>
+            <xs:element minOccurs='0' name="ThrowExceptionOnLimit" type='xs:boolean'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="dcCapture">
+    <xs:all>
+      <xs:element minOccurs='1' maxOccurs='1' name="DataCollector" type='dcDataCollector'/>
+      <xs:element minOccurs='1' maxOccurs='1' name="Collect" type='dcCollect'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="dcDataCollector">
+    <xs:simpleContent>
+      <xs:extension base="nonEmptyString">
+        <xs:attribute name="scope" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="dcCollect">
+    <xs:all>
+      <xs:element minOccurs='0' name="Source" type='dcSource'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="XMLPayload" type='dcXmlPayload'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="JSONPayload" type='dcJsonPayload'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="URIPath" type='patternSet'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="QueryParam" type="nameWithPatternSet"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="Header" type="nameWithPatternSet"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="FormParam" type="nameWithPatternSet"/>
+    </xs:all>
+    <xs:attribute name="default" use="optional" type="nonEmptyString"/>
+    <xs:attribute name="ref" use="optional" type="nonEmptyString"/>
+    <xs:assert test="(exists(@ref) and not(@ref = '')) or
+                     (count(QueryParam) = 1 or
+                     count(Header) = 1 or
+                     count(FormParam) = 1 or
+                     count(URIPath) = 1 or
+                     count(JSONPayload) = 1 or
+                     count(XMLPayload) = 1)"/>
+  </xs:complexType>
+
+  <xs:complexType name="dcSource">
+    <xs:simpleContent>
+      <xs:extension base="nonEmptyString">
+        <xs:attribute name="clearPayload" use="optional" type="xs:boolean"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="dcXmlPayload">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs='1' name='Namespaces' type="xmlNamespaces"/>
+      <xs:element minOccurs="1" maxOccurs="1" name='XPath' type="xs:string"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="dcJsonPayload">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name='JSONPAth' type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

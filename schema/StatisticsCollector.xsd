@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="StatisticsCollector">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element name="Statistics" type="Statistics"/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="Statistics">
+    <xs:sequence>
+      <xs:element name="Statistic" type="Statistic"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Statistic">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" use="required" type="xs:NCName"/>
+        <xs:attribute name="ref" use="required" type="xs:string"/>
+        <xs:attribute name="type" use="required" type="xs:NCName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

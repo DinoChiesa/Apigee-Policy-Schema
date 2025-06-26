@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="SetDialogflowResponse">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" maxOccurs='1' name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element minOccurs='0' name="Source" type="xs:string"/>
+            <xs:element minOccurs='0' name="DialogflowVersion" type="xs:NCName"/>
+            <xs:element minOccurs='0' name="NaturalLanguageResponse" type='sdfNaturalLanguageResponse'/>
+            <xs:element minOccurs='0' name="Parameters" type='sdfParameters'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="sdfNaturalLanguageResponse">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="MergeBehavior" type='sdfMergeBehavior'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="Phrases" type='sdfPhrases'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:simpleType name="sdfMergeBehavior">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="APPEND"/>
+      <xs:enumeration value="REPLACE"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="sdfPhrases">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="Phrase" type='sdfPhrase'/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="sdfPhrase">
+    <xs:choice>
+      <xs:element name="Header" type="sdfHeader"/>
+      <xs:element name="JSONPath" type="nonEmptyString"/>
+      <xs:element name="Ref" type="nonEmptyString"/>
+      <xs:element name="Value" type="nonEmptyString"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="sdfHeader">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" use="required" type="xs:NCName"/>
+        <xs:assert test=". = ''" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name='sdfParameters'>
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" ref="sdfParameter"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="sdfParameter">
+    <xs:choice>
+      <xs:element name="Header" type="sdfHeader"/>
+      <xs:element name="JSONPath" type="nonEmptyString"/>
+      <xs:element name="Ref" type="nonEmptyString"/>
+      <xs:element name="Value" type="nonEmptyString"/>
+    </xs:choice>
+    <xs:attribute name="name" use="required" type="xs:NCName"/>
+  </xs:complexType>
+
+</xs:schema>

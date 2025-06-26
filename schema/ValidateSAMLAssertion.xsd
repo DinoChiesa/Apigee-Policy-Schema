@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="xmlNamespaces.xsd"/>
+
+  <xs:element name="ValidateSAMLAssertion">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='1' name="Source" type='validateSamlSource'/>
+            <xs:element minOccurs='0' name="TrustStore" type='xs:NCName'/>
+            <xs:element minOccurs='0' name="RemoveAssertion" type="xs:boolean"/>
+          </xs:all>
+          <xs:attribute name="ignoreContentType" use="optional" type="xs:boolean"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name='validateSamlSource'>
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs='1' name='Namespaces' type="xmlNamespaces"/>
+      <xs:element minOccurs="0" maxOccurs="1" name='XPath' type="xs:string"/>
+      <xs:element minOccurs="0" maxOccurs="1" name='AssertionXPath' type="xs:string"/>
+      <xs:element minOccurs="0" maxOccurs="1" name='SignedElementXPath' type="xs:string"/>
+    </xs:all>
+    <xs:attribute name="name" use="optional" type="nonEmptyString"/>
+    <xs:assert test="(count(XPath) = 1 and count(AssertionXPath) = 0 and count(SignedElementXPath) = 0) or
+                     (count(XPath) = 0 and count(AssertionXPath) = 1 and count(SignedElementXPath) = 1)"/>
+  </xs:complexType>
+
+</xs:schema>

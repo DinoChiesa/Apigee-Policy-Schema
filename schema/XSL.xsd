@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="XSL">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+          <xs:element name="ResourceURL" type="xslResourceURL"/>
+          <xs:element minOccurs='0' name="OutputVariable" type="nonEmptyString"/>
+          <xs:element minOccurs='0' name="Parameters" type="xslParameters"/>
+          <xs:element minOccurs='0' name="Source" type="xs:NCName"/>
+          </xs:all>
+          <xs:assert test="count(Source) le 1 and count(Parameters) le 1 and count(OutputVariable) le 1"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="xslParameters">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs="unbounded" name="Parameter" type="xslParameter"/>
+    </xs:sequence>
+    <xs:attribute name="ignoreUnresolvedVariables" use="optional" type="xs:boolean"/>
+  </xs:complexType>
+
+  <xs:complexType name="xslParameter">
+    <xs:attribute name="name" use="required" type="xs:NCName"/>
+    <xs:attribute name="ref" use="required" type="xs:NCName"/>
+    <xs:attribute name="value" use="optional" type="xs:string"/>
+    <xs:assert test=". = ''" />
+  </xs:complexType>
+
+  <xs:simpleType name="xslResourceURL">
+    <xs:restriction base="resourceURL">
+      <xs:assertion test="substring-before($value, '://') = ('xsl')"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

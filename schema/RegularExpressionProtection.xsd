@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="patterns.xsd"/>
+
+  <xs:element name="RegularExpressionProtection">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='0' name="Source" type='nonEmptyString'/>
+            <xs:element minOccurs="0" name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element minOccurs="0" name="JSONPayload"/>
+            <xs:element minOccurs="0" name="XMLPayload"/>
+            <xs:element minOccurs="0" name="URIPath" type='patternSet'/>
+            <xs:element minOccurs="0" name="QueryParam" type='nameWithPatternSet'/>
+            <xs:element minOccurs="0" name="Header" type='nameWithPatternSet'/>
+            <xs:element minOccurs="0" name="FormParam" type='nameWithPatternSet'/>
+            <xs:element minOccurs="0" name="Variable" type='nameWithPatternSet'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+    <xs:complexType name="JSONPayload">
+      <xs:sequence>
+        <xs:element name="JSONPath" type='JSONPath'/>
+      </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="JSONPath">
+      <xs:all>
+        <xs:element minOccurs='1' maxOccurs='1' name="Expression" type='xs:string'/>
+        <xs:element minOccurs='1' maxOccurs='unbounded' name="Pattern" type='pattern'/>
+      </xs:all>
+    </xs:complexType>
+
+    <xs:complexType name="XMLPayload">
+      <xs:sequence>
+        <xs:element name="XPath" type='XPath'/>
+      </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="XPath">
+      <xs:all>
+        <xs:element minOccurs='1' maxOccurs='1' name="Expression" type='xs:string'/>
+        <xs:element minOccurs='0' name="Type" type='xpathTypeType'/>
+        <xs:element minOccurs='1' maxOccurs='unbounded' name="Pattern" type='pattern'/>
+      </xs:all>
+    </xs:complexType>
+
+  <xs:simpleType name="xpathTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="string"/>
+      <xs:enumeration value="nodeset"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

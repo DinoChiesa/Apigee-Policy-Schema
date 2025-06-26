@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:element name="PublishMessage">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" maxOccurs='1' name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element minOccurs="0" maxOccurs='1' name="Source" type='xs:string'/>
+            <xs:element minOccurs="0" maxOccurs='1' name='Attributes' type='pubsubAttributes'/>
+            <xs:element minOccurs="0" maxOccurs='1' name='CloudPubSub' type='pubsubCloudPubSub'/>
+            <xs:element minOccurs="0" maxOccurs='1' name='UseMessageAsSource' type='nonEmptyString'/>
+          </xs:all>
+          <xs:assert test="(count(Source) = 1 and count(UseMessageAsSource) = 0) or
+                           (count(Source) = 0 and count(UseMessageAsSource) = 1)"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="pubsubCloudPubSub">
+    <xs:sequence>
+      <xs:element name="Topic" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="pubsubAttributes">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='Attribute' type="pubsubAttribute"/>
+    </xs:sequence>
+    <xs:assert test="count(Attribute) le 10"/>
+  </xs:complexType>
+
+  <xs:complexType name="pubsubAttribute">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" use="required" type='xs:string'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

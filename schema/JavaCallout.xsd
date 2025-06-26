@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="JavaCallout">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element name="ClassName" type="javaClassNameType"/>
+            <xs:element name="ResourceURL" type='javaResourceURL'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="javaClassNameType">
+    <xs:restriction base="xs:string">
+      <xs:assertion test="matches($value, '[a-zA-Z_$][a-zA-Z\d_$]*(\.[a-zA-Z_$][a-zA-Z\d_$]*)*')"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="javaResourceURL">
+    <xs:restriction base="resourceURL">
+      <xs:assertion test="substring-before($value, '://') = ('java')"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

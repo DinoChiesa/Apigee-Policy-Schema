@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+    <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="HMAC">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element name="Algorithm" type="xs:NCName"/>
+            <xs:element name="Message" type="Message"/>
+            <xs:element name="SecretKey" type="SecretKey"/>
+            <xs:element minOccurs='0' name="Output" type="Output"/>
+            <xs:element minOccurs='0' name="VerificationValue" type="VerificationValue" />
+          </xs:all>
+          <xs:assert test="count(Algorithm) = 1 and
+                           count(Message) = 1 and
+                           count(SecretKey) = 1" />
+
+          <xs:assert test="count(Output) &lt;= 1 and
+                           count(VerificationValue) &lt;= 1"/>
+
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="Message">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" type="xs:NCName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="SecretKey">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" use="required" type="xs:NCName"/>
+        <xs:assert test=". = ''" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="Output">
+    <xs:simpleContent>
+      <xs:extension base="xs:NCName">
+        <xs:attribute name="encoding" use="required" type="xs:NCName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="VerificationValue">
+    <xs:attribute name="encoding" use="required" type="xs:NCName"/>
+    <xs:attribute name="ref" use="required" type="xs:NCName"/>
+  </xs:complexType>
+
+</xs:schema>

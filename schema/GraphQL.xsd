@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:element name="GraphQL">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='1' maxOccurs='1' name="Source" type='nonEmptyString'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Action" type='graphqlAction'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="MaxCount" type='graphqlNumber'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="MaxDepth" type='graphqlNumber'/>
+            <xs:element minOccurs='1' maxOccurs='1' name="OperationType" type='graphqlOperation'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ResourceURL" type='graphqlResourceURL'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="graphqlResourceURL">
+    <xs:restriction base="resourceURL">
+      <xs:assertion test="substring-before($value, '://') = ('graphql')"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="graphqlAction">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="parse"/>
+      <xs:enumeration value="verify"/>
+      <xs:enumeration value="parse_verify"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="graphqlNumber">
+    <xs:restriction base="xs:string">
+      <xs:assertion test="$value castable as xs:integer"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="graphqlOperation">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="query"/>
+      <xs:enumeration value="mutation"/>
+      <xs:enumeration value="query_mutation"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

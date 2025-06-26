@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="AccessEntity">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element name="EntityType" type="aeEntityType"/>
+            <xs:element name="EntityIdentifier" type="aeEntityIdentifier"/>
+            <xs:element minOccurs='0' name="SecondaryIdentifier" type="aeSecondaryIdentifier"/>
+            <xs:element minOccurs='0' name="OutputFormat" type="aeOutputFormat"/>
+          </xs:all>
+          <xs:assert test="count(EntityType) = 1 and
+                           count(EntityIdentifier) = 1 and
+                           count(SecondaryIdentifier) &lt;= 1" />
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="aeEntityIdentifier">
+    <xs:attribute name="ref" use="required" type="xs:NCName"/>
+    <xs:attribute name="type" use="required" type="xs:NCName"/>
+  </xs:complexType>
+
+  <xs:complexType name="aeEntityType">
+    <xs:attribute name="value" use="required" type="xs:NCName"/>
+  </xs:complexType>
+
+  <xs:complexType name="aeSecondaryIdentifier">
+    <xs:attribute name="ref" use="required"/>
+    <xs:attribute name="type" use="required"/>
+  </xs:complexType>
+
+  <xs:simpleType name="aeOutputFormat">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="XML"/>
+      <xs:enumeration value="JSON"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="XMLToJSON">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element name="Source" type="nonEmptyString" minOccurs='0'/>
+            <xs:element name="OutputVariable" type="nonEmptyString" minOccurs='0'/>
+            <xs:element name="Format" type='x2jFormatType' minOccurs='0' />
+            <xs:element name="Options" type='x2jOptionsType' minOccurs='0' />
+          </xs:all>
+          <xs:assert test="count(Source) le 1 and
+                           count(Options) le 1 and count(Format) le 1 and
+                           count(OutputVariable) le 1"/>
+          <!-- either Options or Format -->
+          <xs:assert test="(count(Options) = 1 and count(Format) = 0) or
+                           (count(Options) = 0 and count(Format) = 1)"/>
+
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="x2jFormatType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="xml.com"/>
+      <xs:enumeration value="yahoo"/>
+      <xs:enumeration value="google"/>
+      <xs:enumeration value="badgerFish"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="x2jOptionsType">
+    <xs:all>
+      <xs:element minOccurs='0' name="RecognizeBoolean" type="xs:boolean"/>
+      <xs:element minOccurs='0' name="RecognizeNumber" type="xs:boolean"/>
+      <xs:element minOccurs='0' name="RecognizeNull" type="xs:boolean"/>
+      <xs:element minOccurs='0' name="NullValue" type="xs:string"/>
+      <xs:element minOccurs='0' name="NamespaceBlockName" type="xs:string"/>
+      <xs:element minOccurs='0' name="DefaultNamespaceNodeName" type="xs:string"/>
+      <xs:element minOccurs='0' name="NamespaceSeparator" type="xs:NCName"/>
+      <xs:element minOccurs='0' name="TextAlwaysAsProperty" type="xs:boolean"/>
+      <xs:element minOccurs='0' name="TextNodeName" type="xs:string"/>
+      <xs:element minOccurs='0' name="AttributeBlockName" type="xs:string"/>
+      <xs:element minOccurs='0' name="AttributePrefix" type="xs:string"/>
+      <xs:element minOccurs='0' name="OutputPrefix" type="xs:string"/>
+      <xs:element minOccurs='0' name="OutputSuffix" type="xs:string"/>
+      <xs:element minOccurs='0' name="TreatAsArray" type="x2jTreatAsArray"/>
+    </xs:all>
+    <xs:assert test="count(RecognizeBoolean) le 1 and
+                     count(RecognizeNumber) le 1 and
+                     count(RecognizeNull) le 1 and
+                     count(NullValue) le 1 and
+                     count(NamespaceBlockName) le 1 and
+                     count(DefaultNamespaceNodeName) le 1 and
+                     count(NamespaceSeparator) le 1 and
+                     count(TextAlwaysAsProperty) le 1 and
+                     count(TextNodeName) le 1 and
+                     count(AttributeBlockName) le 1 and
+                     count(AttributePrefix) le 1 and
+                     count(OutputPrefix) le 1 and
+                     count(OutputSuffix) le 1 and
+                     count(TreatAsArray) le 1" />
+  </xs:complexType>
+
+  <xs:complexType name='x2jTreatAsArray'>
+    <xs:sequence>
+      <xs:element minOccurs='1' maxOccurs="unbounded" name="Path" type="x2jPath"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="x2jPath">
+    <xs:simpleContent>
+      <xs:extension base="nonEmptyString">
+        <xs:attribute name="unwrap" use="optional" type="xs:boolean"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

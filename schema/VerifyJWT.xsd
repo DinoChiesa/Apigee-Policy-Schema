@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="jwtCommon.xsd"/>
+
+  <xs:element name="VerifyJWT">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element minOccurs="0" name="Algorithms" type="jwtEncryptionAlgorithmPair"/>
+            <xs:element minOccurs='0' name="Algorithm" type="jwtSigningAlgorithmSpec"/>
+            <xs:element minOccurs='0' name="Source" type="nonEmptyString"/>
+
+            <xs:element minOccurs="0" name="SecretKey" type="jwtSecretKeyType"/>
+            <xs:element minOccurs="0" name="PublicKey" type="jwtPublicKeyType"/>
+            <xs:element minOccurs="0" name="PrivateKey" type="jwtPrivateKeyType"/>
+
+            <xs:element minOccurs="0" name="Subject" type="propertyBean"/>
+            <xs:element minOccurs="0" name="Issuer" type="propertyBean"/>
+            <xs:element minOccurs="0" name="Audience" type="propertyBean"/>
+            <xs:element minOccurs="0" name="TimeAllowance" type="jwtTimeIntervalType"/>
+            <xs:element minOccurs="0" name="MaxLifespan" type="jwtMaxLifespan"/>
+          </xs:all>
+          <xs:assert test="(count(Algorithm) = 1 and count(Algorithms) = 0) or
+            (count(Algorithm) = 0 and count(Algorithms) = 1)"/>
+          <xs:assert test="(count(SecretKey) = 1 and count(PublicKey) = 0 and count(PrivateKey) = 0) or
+            (count(SecretKey) = 0 and count(PublicKey) = 1 and count(PrivateKey) = 0) or
+            (count(SecretKey) = 0 and count(PublicKey) = 0 and count(PrivateKey) = 1)"/>
+          <xs:assert test="count(Subject) &lt;= 1 and
+                           count(Audience) &lt;= 1 and
+                           count(Issuer) &lt;= 1 and
+                           count(TimeAllowance) &lt;= 1"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+
+  <xs:complexType name='jwtMaxLifespan'>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="useIssueTime" type="xs:boolean"/>
+        <xs:assert test="matches($value, '^\d+[smhd]$')"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

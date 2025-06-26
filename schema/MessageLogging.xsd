@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="MessageLogging">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" name="CloudLogging" type='mlCloudLogging'/>
+            <xs:element minOccurs="0" name="Syslog" type='mlSyslog'/>
+            <xs:element minOccurs="0" name="File" type='mlFile'/>
+            <xs:element minOccurs="0" name="logLevel" type='mlLogLevel'/>
+            <xs:element minOccurs='0' name="BufferMessage" type='xs:boolean'/>
+          </xs:all>
+          <xs:assert test="(count(Syslog) = 1 and count(CloudLogging) = 0 and count(File) = 0) or
+                           (count(Syslog) = 0 and count(CloudLogging) = 1 and count(File) = 0) or
+                           (count(Syslog) = 0 and count(CloudLogging) = 0 and count(File) = 1) "/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="mlLogLevel">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="INFO"/>
+      <xs:enumeration value="ALERT"/>
+      <xs:enumeration value="WARN"/>
+      <xs:enumeration value="ERROR"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="mlCloudLogging">
+    <xs:all>
+      <xs:element minOccurs='1' name="LogName" type='mlLogName'/>
+      <xs:element minOccurs='1' name="Message" type='messagePayload'/>
+      <xs:element minOccurs='0' name="Labels" type='mlLabels'/>
+      <xs:element minOccurs='0' name="ResourceType" type='xs:string'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:simpleType name="mlLogName">
+    <xs:restriction base="xs:string">
+      <xs:assertion test="string-length($value) ge 1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="mlLabels">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='Label' type="mlLabel"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="mlLabel">
+    <xs:all>
+      <xs:element name="Key" type="xs:string"/>
+      <xs:element name="Value" type="xs:string"/>
+    </xs:all>
+    <xs:assert test="count(Key) = 1 and count(Value) = 1"/>
+  </xs:complexType>
+
+  <xs:complexType name="mlSyslog">
+    <xs:all>
+      <xs:element minOccurs='1' name="Message" type="messagePayload"/>
+      <xs:element minOccurs='0' name="Host" type="xs:string"/>
+      <xs:element minOccurs='0' name="Port" type="xs:integer"/>
+      <xs:element minOccurs='0' name="Protocol" type="mlProtocol"/>
+      <xs:element minOccurs='0' name="FormatMessage" type="xs:boolean"/>
+      <xs:element minOccurs='0' name="DateFormat" type="xs:string"/>
+      <xs:element minOccurs='0' name="PayloadOnly" type="xs:boolean"/>
+      <xs:element minOccurs='0' name="SSLInfo" type="sslInfo"/>
+    </xs:all>
+    <xs:assert test="count(Message) = 1"/>
+    <xs:assert test="count(Host) le 1 and
+                     count(Port) le 1 and
+                     count(Protocol) le 1 and
+                     count(FormatMessage) le 1 and
+                     count(DateFormat) le 1 and
+                     count(PayloadOnly) le 1 and
+                     count(SSLInfo) le 1"/>
+  </xs:complexType>
+
+  <xs:complexType  name="mlFile">
+    <xs:all>
+      <xs:element minOccurs='1' name="Message" type='messagePayload'/>
+      <xs:element minOccurs='1' name="FileName" type="xs:NCName"/>
+      <xs:element minOccurs='0' name="FileRotationOptions" type='mlFileRotationOptions'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="mlFileRotationOptions">
+    <xs:all>
+      <xs:element minOccurs='0' name="FileRotationType" type="mlFileRotation"/>
+      <xs:element minOccurs='0' name="MaxFileSizeInMB" type="xs:integer"/>
+      <xs:element minOccurs='0' name="MaxFilesToRetain" type="xs:integer"/>
+      <xs:element minOccurs='0' name="RotationFrequency" type='xs:integer'/>
+    </xs:all>
+    <xs:attribute name="rotateFileOnStartup" use="required" type="xs:boolean"/>
+    <xs:assert test="count(FileRotationType) le 1 and count(MaxFileSizeInMB) le 1 and count(MaxFilesToRetain) le 1"/>
+  </xs:complexType>
+
+  <xs:simpleType name="mlFileRotation">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="TIME"/>
+      <xs:enumeration value="SIZE"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="mlProtocol">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="TCP"/>
+      <xs:enumeration value="UDP"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

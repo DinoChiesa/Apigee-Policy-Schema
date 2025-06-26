@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="assignBase.xsd"/>
+
+  <xs:element name="MonetizationLimitsCheck">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" maxOccurs='1' name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="FaultResponse" type='mintFaultResponse'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="mintFaultResponse">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="AssignVariable" type='assignVariable'/>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Add" type='mlFaultAdd'/>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Set" type='mlFaultSet'/>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Copy" type='mlFaultCopy'/>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Remove" type='mlFaultRemove'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="mlFaultAdd">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="Headers" type="assignAddHeaders"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="mlFaultSet">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="Headers" type="assignSetHeaders"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="Payload" type="messagePayload"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="StatusCode" type='statusCode'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="mlFaultCopy">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="Headers">
+        <xs:alternative test="exists(Header)" type="namedHeaders"/>
+        <xs:alternative type="laxBooleanType"/>
+      </xs:element>
+      <xs:element minOccurs='0' maxOccurs='1' name="StatusCode" type="laxBooleanType"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="mlFaultRemove">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="Headers">
+        <xs:alternative test="exists(Header)" type="namedHeaders"/>
+        <xs:alternative type="laxBooleanType"/>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+</xs:schema>

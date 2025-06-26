@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:element name="BasicAuthentication">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='1' name="Operation" type='baOperationType'/>
+            <xs:element minOccurs='0' name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element name="User" type='refOnly'/>
+            <xs:element name="Password" type='refOnly'/>
+            <xs:element minOccurs='0' name="AssignTo" type='baAssignTo'/>
+            <xs:element minOccurs='0' name="Source" type='nonEmptyString'/>
+          </xs:all>
+          <xs:assert test="count(User) = 1 and count(Password) = 1"/>
+          <xs:assert test="(count(AssignTo) = 1 and Operation = 'Encode') or
+                           (count(AssignTo) = 0 and not(Operation = 'Encode'))"/>
+          <xs:assert test="(count(Source) = 1 and Operation = 'Decode') or
+                           (count(Source) = 0 and not(Operation = 'Decode'))"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="baOperationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Encode"/>
+      <xs:enumeration value="Decode"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="baAssignTo">
+    <xs:simpleContent>
+      <xs:extension base="nonEmptyString">
+        <xs:attribute name="createNew" type="xs:boolean"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

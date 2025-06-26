@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="Javascript">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='0' maxOccurs='unbounded' name="IncludeURL" type="jscResourceURL"/>
+            <xs:element minOccurs='0' name="ResourceURL" type="jscResourceURL"/>
+            <xs:element minOccurs='0' name="Source" type="xs:string"/>
+            <xs:element minOccurs="0" maxOccurs="1" name="SSLInfo" type="sslInfo"/>
+          </xs:all>
+          <xs:attribute name="timeLimit" type="xs:integer"/>
+          <xs:assert test="count(SSLInfo) le 1 and
+                           count(ResourceURL) le 1 and
+                           count(Source) le 1" />
+          <xs:assert test="count(ResourceURL) = 1 or count(Source) = 1" />
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="jscResourceURL">
+    <xs:restriction base="resourceURL">
+      <xs:assertion test="substring-before($value, '://') = ('jsc')"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

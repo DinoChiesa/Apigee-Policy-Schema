@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           xmlns:xerces="http://xerces.apache.org"
+           xmlns:saxon="http://saxon.sf.net/"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:simpleType name="cacheScopeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value=""/>
+      <xs:enumeration value="Global"/>
+      <xs:enumeration value="Application"/>
+      <xs:enumeration value="Proxy"/>
+      <xs:enumeration value="Target"/>
+      <xs:enumeration value="Exclusive"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="cacheKey">
+    <xs:all>
+      <xs:element minOccurs="0" name="Prefix" type="xs:string"/>
+      <xs:element minOccurs="0" maxOccurs='unbounded' name="KeyFragment" type='propertyBean'/>
+    </xs:all>
+  </xs:complexType>
+<!--
+
+  <xs:complexType name="keyFragment">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" type="xs:NCName" />
+        <xs:attribute name="type" type="xs:NCName" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+-->
+
+  <xs:complexType name="cacheExpirySettings">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="ExpiryDate" type='dateExpiry'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="TimeOfDay" type='timeOfDayExpiry'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="TimeoutInSec" type='timeoutInSecType'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="TimeoutInSeconds" type='timeoutInSecondsType'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:simpleType name="timeFormatType">
+    <xs:restriction base="xs:string">
+      <xs:assertion test="($value = '') or
+                          matches($value, '([01]\d|2[0-3]):[0-5]\d:[0-5]\d|24:00:00')"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="timeOfDayExpiry">
+    <xs:simpleContent>
+      <xs:restriction base="propertyBean">
+        <xs:simpleType>
+          <xs:restriction base="timeFormatType" />
+        </xs:simpleType>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="dateFormatType">
+    <xs:restriction base="xs:string">
+      <xs:assertion test="($value = '') or
+                          matches($value, '(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])-(20\d\d)')"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="dateExpiry">
+    <xs:simpleContent>
+      <xs:restriction base="propertyBean">
+        <xs:simpleType>
+          <xs:restriction base="dateFormatType" />
+        </xs:simpleType>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="timeoutInSecondsType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" type="xs:string"/>
+        <xs:assert test="(string-length($value) = 0) or ($value castable as xs:integer)"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="timeoutInSecType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" type="xs:string"/>
+        <xs:assert test="(exists(@ref) and $value = '') or
+                         ((not(exists(@ref)) or @ref = '') and $value castable as xs:integer)"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

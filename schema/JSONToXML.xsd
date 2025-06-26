@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:element name="JSONToXML">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='0' name="OutputVariable" type="nonEmptyString" />
+            <xs:element minOccurs='0' name="Source" type='nonEmptyString'/>
+            <xs:element minOccurs='0' name="Options" type='j2xOptions'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="j2xOptions">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="NullValue" type="xs:NCName"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="NamespaceBlockName" type="xs:string"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="DefaultNamespaceNodeName" type="xs:string"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="NamespaceSeparator" type="xs:NMTOKEN"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="TextNodeName" type="xs:string"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="AttributeBlockName" type="xs:string"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="AttributePrefix" type="xs:string"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="InvalidCharsReplacement" type="xs:string"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="ObjectRootElementName" type="xs:NCName"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="ArrayRootElementName" type="xs:NCName"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="ArrayItemElementName" type="xs:NCName"/>
+    </xs:all>
+  </xs:complexType>
+</xs:schema>

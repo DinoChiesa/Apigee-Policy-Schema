@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="SetOAuthV2Info">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='1' maxOccurs='1' name="AccessToken" type='propertyBean'/>
+            <xs:element minOccurs='1' maxOccurs='1' name="Attributes" type='oauthInfoAttributes'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="oauthInfoAttributes">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='Attribute' type="oauthInfoAttribute"/>
+    </xs:sequence>
+    <xs:assert test="count(Attribute) le 18"/>
+  </xs:complexType>
+
+  <xs:complexType name="oauthInfoAttribute">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" use="required" type='xs:string'/>
+        <xs:attribute name="ref" use="optional" type='xs:string'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="KeyValueMapOperations">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" name="ExpiryTimeInSeconds" type="ExpiryTimeInSecondsType"/>
+            <xs:element minOccurs="0" name="ExpiryTimeInSecs" type="ExpiryTimeInSecsType"/>
+            <xs:element name="Scope" type="ScopeType"/>
+            <xs:element minOccurs="0" name="MapName" type="propertyBean"/>
+            <xs:element minOccurs="0" name="ExclusiveCache" type="xs:boolean"/> <!-- deprecated -->
+            <xs:element minOccurs="0" name="InitialEntries" type="InitialEntries"/>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="Put" type="PutType"/>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="Delete" type="DeleteType"/>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="Get" type="GetType"/>
+          </xs:all>
+          <xs:attribute name="mapIdentifier" type="xs:NCName"/>
+          <!-- neither or one, but not both -->
+          <xs:assert test="(count(ExpiryTimeInSeconds) = 1 and count(ExpiryTimeInSecs) = 0) or
+                           (count(ExpiryTimeInSeconds) = 0 and count(ExpiryTimeInSecs) = 1) or
+                           (count(ExpiryTimeInSeconds) = 0 and count(ExpiryTimeInSecs) = 0)"/>
+          <!-- either Scope or the deprecated ExclusiveCache, or neither. Not both. -->
+          <!--
+          <xs:assert test="(count(Scope) = 0 and count(ExclusiveCache) = 0) or
+                           (count(Scope) = 1 and count(ExclusiveCache) = 0) or
+                           (count(Scope) = 0 and count(ExclusiveCache) = 1)"/>
+          -->
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="ExpiryTimeInSecondsType">
+    <xs:simpleContent>
+      <xs:extension base="xs:integer">
+        <xs:attribute name="ref" type="xs:NCName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="ExpiryTimeInSecsType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" type="xs:NCName"/>
+        <xs:assert test="(exists(@ref) and . = '') or
+                         (not(exists(@ref)) and . castable as xs:integer)"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="InitialEntries">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='Entry' type="EntryType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="EntryType">
+    <xs:choice maxOccurs="unbounded">
+      <xs:element name="Key" type="KeyType"/>
+      <xs:element name="Value" type="KVMValueType"/>
+    </xs:choice>
+    <xs:assert test="count(Key) = 1 and count(Value) >= 1"/>
+  </xs:complexType>
+
+  <xs:complexType name="PutType">
+    <xs:complexContent>
+      <xs:extension base="EntryType">
+        <xs:attribute name="override" type="xs:boolean"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:simpleType name="ScopeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="organization"/>
+      <xs:enumeration value="environment"/>
+      <xs:enumeration value="apiproxy"/>
+      <xs:enumeration value="policy"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="DeleteType">
+    <xs:all>
+      <xs:element name="Key" type="KeyType" minOccurs="1" maxOccurs="1"/>
+    </xs:all>
+    <xs:assert test="count(Key) = 1"/>
+  </xs:complexType>
+
+  <xs:complexType name="GetType">
+    <xs:sequence>
+      <xs:element name="Key" type="KeyType"/>
+    </xs:sequence>
+    <xs:attribute name="assignTo" use="required" type="xs:NCName"/>
+    <xs:attribute name="index" type="xs:integer"/>
+  </xs:complexType>
+
+
+  <xs:complexType name="KeyType">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" minOccurs='1' name="Parameter" type="ParameterType"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ParameterType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" type="xs:NCName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="KVMValueType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ref" type="xs:NCName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

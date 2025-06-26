@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="assignBase.xsd"/>
+
+  <xs:element name="ServiceCallout">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element name="Request" type="Request"/>
+            <xs:element minOccurs='0' name="Response" type="xs:NCName"/>
+            <xs:element minOccurs='0' name="HTTPTargetConnection" type="HTTPTargetConnection"/>
+            <xs:element minOccurs='0' name="Timeout" type="xs:integer"/>
+          </xs:all>
+          <xs:assert test="count(Request) = 1 and
+                           count(Response) le 1 and
+                           count(Timeout) le 1"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="Request">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element minOccurs="0" name="Add" type="assignAdd"/>
+      <xs:element minOccurs="0" name="Set" type="assignSetRequest"/>
+      <xs:element minOccurs="0" name="Copy" type="assignCopy"/>
+      <xs:element minOccurs="0" name="Remove" type="assignRemove"/>
+      <xs:element minOccurs="0" name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+    </xs:choice>
+    <xs:attribute name="clearPayload" type="xs:boolean"/>
+    <xs:attribute name="variable" type="xs:NCName"/>
+    <xs:assert test="count(IgnoreUnresolvedVariables) &lt;= 1 and
+                     count(Set) &lt;= 1"/>
+  </xs:complexType>
+
+  <xs:complexType name="HTTPTargetConnection">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element minOccurs="0" name="Authentication" type="authentication"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="SSLInfo" type="sslInfo"/>
+      <xs:element name="Properties" type="Properties"/>
+      <xs:element name="URL" type="xs:string"/>
+    </xs:choice>
+    <xs:assert test="count(Authentication) le 1 and
+                     count(SSLInfo) le 1 and
+                     count(Properties) le 1 and
+                     count(URL) le 1"/>
+  </xs:complexType>
+
+</xs:schema>

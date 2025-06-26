@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="patterns.xsd"/>
+  <xs:include schemaLocation="xmlNamespaces.xsd"/>
+
+  <xs:element name="ExtractVariables">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" maxOccurs='1' name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="VariablePrefix" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Source" type='evSource'/>
+            <xs:element minOccurs='0' maxOccurs='unbounded' name="Variable" type='nameWithPatternSet'/>
+            <xs:element minOccurs='0' maxOccurs='unbounded' name="QueryParam" type='nameWithPatternSet'/>
+            <xs:element minOccurs='0' maxOccurs='unbounded' name="FormParam" type='nameWithPatternSet'/>
+            <xs:element minOccurs='0' maxOccurs='unbounded' name="Header" type='nameWithPatternSet'/>
+            <xs:element minOccurs='0' maxOccurs='unbounded' name="URIPath" type='patternSet'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="JSONPayload" type='JSONPayload'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="XMLPayload" type="XMLPayload"/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="evSource">
+    <xs:simpleContent>
+      <xs:extension base="nonEmptyString">
+        <xs:attribute name="clearPayload" type="xs:boolean" use='optional'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="JSONPayload">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name='Variable' type="jsonPathVariable"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="jsonPathVariable">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="JSONPath" type='xs:string'/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:NCName"/>
+    <xs:attribute name="type" type="xs:NCName"/>
+  </xs:complexType>
+
+  <xs:complexType name="XMLPayload">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs='1' name='Namespaces' type="xmlNamespaces"/>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='Variable' type="xpathVariable"/>
+    </xs:all>
+    <xs:attribute name="stopPayloadProcessing" type="xs:boolean"/>
+  </xs:complexType>
+
+  <xs:complexType name="xpathVariable">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="XPath" type='xs:string'/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:NCName"/>
+    <xs:attribute name="type" type="xs:NCName"/>
+  </xs:complexType>
+
+</xs:schema>

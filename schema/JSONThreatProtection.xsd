@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="JSONThreatProtection">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='0' name="Source" type="xs:NCName"/>
+            <xs:element minOccurs='0' name="ArrayElementCount" type="xs:integer"/>
+            <xs:element minOccurs='0' name="ContainerDepth" type="xs:integer"/>
+            <xs:element minOccurs='0' name="ObjectEntryCount" type="xs:integer"/>
+            <xs:element minOccurs='0' name="ObjectEntryNameLength" type="xs:integer"/>
+            <xs:element minOccurs='0' name="StringValueLength" type="xs:integer"/>
+          </xs:all>
+          <xs:assert test="count(Source) le 1"/>
+          <xs:assert test="count(ArrayElementCount) = 1 or
+                           count(ContainerDepth) = 1 or
+                           count(ObjectEntryCount) = 1 or
+                           count(ObjectEntryNameLength) = 1 or
+                           count(StringValueLength) = 1"/>
+          <xs:assert test="count(ArrayElementCount) le 1 and
+                           count(ContainerDepth) le 1 and
+                           count(ObjectEntryCount) le 1 and
+                           count(ObjectEntryNameLength) le 1 and
+                           count(StringValueLength) le 1"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="jwtCommon.xsd"/>
+
+  <xs:element name="GenerateJWT">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" maxOccurs='1' name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element minOccurs="0" name="Algorithms" type="jwtEncryptionAlgorithmPair"/>
+            <xs:element minOccurs='0' name="Algorithm" type="jwtSigningAlgorithm"/>
+
+            <xs:element minOccurs="0" name="SecretKey" type="jwtSecretKeyType"/>
+            <xs:element minOccurs="0" name="PublicKey" type="jwtPublicKeyType"/>
+            <xs:element minOccurs="0" name="PrivateKey" type="jwtPrivateKeyTypeForGenerate"/>
+
+            <xs:element minOccurs="0" name="Subject" type="propertyBean"/>
+            <xs:element minOccurs="0" name="Issuer" type="propertyBean"/>
+            <xs:element minOccurs="0" name="Audience" type="propertyBean"/>
+            <xs:element minOccurs="0" name="ExpiresIn" type="jwtTimeIntervalType"/>
+            <xs:element minOccurs="0" name="NotBefore" type="jwtTimeIntervalType"/>
+            <xs:element minOccurs='0' name="OutputVariable" type="nonEmptyString" />
+            <xs:element minOccurs='0' name="AdditionalClaims" type="jwtAdditionalClaims" />
+          </xs:all>
+          <xs:assert test="count(IgnoreUnresolvedVariables) le 1 and
+                           count(Subject) le 1 and
+                           count(Issuer) le 1 and
+                           count(Audience) le 1 and
+                           count(ExpiresIn) le 1 and
+                           count(NotBefore) le 1 and
+                           count(OutputVariable) le 1 and
+                           count(AdditionalClaims) le 1"/>
+          <xs:assert test="(count(Algorithms) = 1 and count(Algorithm) = 0) or
+                           (count(Algorithms) = 0 and count(Algorithm) = 1)"/>
+          <xs:assert test="(count(PublicKey) = 1 and count(SecretKey) = 0 and count(PrivateKey) = 0) or
+                           (count(PublicKey) = 0 and count(SecretKey) = 1 and count(PrivateKey) = 0) or
+                           (count(PublicKey) = 0 and count(SecretKey) = 0 and count(PrivateKey) = 1)"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="jwtPrivateKeyTypeForGenerate">
+    <xs:all>
+      <xs:element name="Value" type="refOnly" minOccurs="1"/>
+      <xs:element name="Password" type="refOnly" minOccurs="0"/>
+      <xs:element name="Id" type="propertyBean" minOccurs="0"/>
+    </xs:all>
+    <xs:assert test="count(Value) = 1 and count(Password) le 1 and count(ID) le 1" />
+  </xs:complexType>
+
+</xs:schema>

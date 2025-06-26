@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="VerifyAPIKey">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+        <xs:element minOccurs='1' name="APIKey" type='propertyBean'/>
+        <xs:element minOccurs="0" name="CacheExpiryInSeconds" type="xs:integer"/>
+          </xs:all>
+           <xs:assert test="count(APIKey) = 1"/>
+           <xs:assert test="count(CacheExpiryInSeconds) le 1"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

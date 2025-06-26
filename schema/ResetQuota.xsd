@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="ResetQuota">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element name="Quota" type="Quota"/>
+          </xs:all>
+          <xs:assert test="count(Quota) = 1" />
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="Quota">
+    <xs:sequence>
+      <xs:element name="Identifier" type="Identifier"/>
+    </xs:sequence>
+    <xs:attribute name="name" use="required" type="xs:NCName"/>
+  </xs:complexType>
+
+  <xs:complexType name="Identifier">
+    <xs:sequence>
+      <xs:element name="Allow" type="Allow"/>
+    </xs:sequence>
+    <xs:attribute name="name" use="required" type="xs:NCName"/>
+  </xs:complexType>
+
+  <xs:complexType name="Allow">
+    <xs:attribute name="ref" use="required"/>
+  </xs:complexType>
+
+</xs:schema>

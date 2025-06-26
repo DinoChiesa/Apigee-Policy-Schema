@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="assignBase.xsd"/>
+
+  <xs:element name="RaiseFault">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element name="FaultResponse" type='rfFaultResponse'/>
+          </xs:all>
+          <xs:assert test="count(IgnoreUnresolvedVariables) le 1 and
+                           count(FaultResponse) le 1"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="rfFaultResponse">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="AsssignVariable" type='assignVariable'/>
+      <xs:element minOccurs='1' maxOccurs='unbounded' name="Set" type='assignResponseSet'/>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Add" type='assignAdd'/>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Copy" type='assignCopy'/>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Remove" type='assignRemove'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="assignResponseSet">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="Headers" type="assignSetHeaders"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="Payload" type="messagePayload"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="ReasonPhrase" type='xs:string'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="StatusCode" type='statusCode'/>
+    </xs:all>
+  </xs:complexType>
+
+</xs:schema>

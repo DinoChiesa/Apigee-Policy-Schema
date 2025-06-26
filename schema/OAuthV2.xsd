@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="OAuthV2">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='0' maxOccurs='1' name="Operation" type='oauthOperation'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="GrantType" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="AccessToken" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="AccessTokenPrefix" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Algorithm" type='oauthAlgType'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Attributes" type='oauthAttributes'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="CacheExpiryInSeconds" type='oauthReffableInt'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ClientId" type="xs:string"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Code" type="xs:string"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ExpiresIn" type='oauthReffableInt'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ExternalAccessToken" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ExternalAuthorization" type='xs:boolean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ExternalRefreshToken" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="GenerateResponse" type='oauthGenerateResponse'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="GenerateErrorResponse" type='oauthGenerateErrorResponse'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="PassWord" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="PrivateKey" type='oauthPrivateKey'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="PublicKey" type='oauthPublicKey'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="RedirectUri" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="RefreshToken" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="RefreshTokenExpiresIn" type='oauthReffableInt'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ResponseType" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ReuseRefreshToken" type="xs:boolean"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="RFCCompliantRequestResponse" type="xs:boolean"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Scope" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="State" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="StoreToken" type='xs:boolean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="SupportedGrantTypes" type='oauthGrantTypes'/>
+
+            <xs:element minOccurs='0' maxOccurs='1' name="Tokens" type='oauthTokens'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="UserName" type='xs:string'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:simpleType name="oauthOperation">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="GenerateAccessToken"/>
+      <xs:enumeration value="GenerateAccessTokenImplicitGrant"/>
+      <xs:enumeration value="GenerateAuthorizationCode"/>
+      <xs:enumeration value="RefreshAccessToken"/>
+      <xs:enumeration value="VerifyAccessToken"/>
+      <xs:enumeration value="InvalidateToken"/>
+      <xs:enumeration value="ValidateToken"/>
+      <xs:enumeration value="GenerateJWTAccessToken"/>
+      <xs:enumeration value="GenerateJWTAccessTokenImplicitGrant"/>
+      <xs:enumeration value="VerifyJWTAccessToken"/>
+      <xs:enumeration value="RefreshJWTAccessToken"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="oauthAlgType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="HS256"/>
+      <xs:enumeration value="HS384"/>
+      <xs:enumeration value="HS512"/>
+      <xs:enumeration value="RS256"/>
+      <xs:enumeration value="RS384"/>
+      <xs:enumeration value="RS512"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="oauthAttributes">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='Attribute' type="oauthAttribute"/>
+    </xs:sequence>
+    <xs:assert test="count(Attribute) le 18"/>
+  </xs:complexType>
+
+  <xs:complexType name="oauthAttribute">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" use="required" type='xs:string'/>
+        <xs:attribute name="ref" use="optional" type='xs:string'/>
+        <xs:attribute name="display" use="optional" type='xs:boolean'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="oauthReffableInt">
+    <xs:simpleContent>
+      <xs:extension base="xs:integer">
+        <xs:attribute name="ref" type="xs:string"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="oauthGenerateResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="Format" type="oauthResponseFormatType" />
+    </xs:sequence>
+    <xs:attribute name="enabled" type="xs:boolean" use="optional"/>
+  </xs:complexType>
+
+  <xs:simpleType name="oauthResponseFormatType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="XML"/>
+      <xs:enumeration value="FORM_PARAM"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="oauthGenerateErrorResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="Realm" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="oauthPrivateKey">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="Value" type='refOnly'/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="oauthPublicKey">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="Value" type='propertyBean'/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="oauthGrantTypes">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="4" name="GrantType" type='oauthGrantType'/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="oauthGrantType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="implicit"/>
+      <xs:enumeration value="client_credentials"/>
+      <xs:enumeration value="password"/>
+      <xs:enumeration value="authorization_code"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="oauthTokens">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Token" type='oauthToken'/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="oauthToken">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="cascade" use="required" type="xs:boolean"/>
+        <xs:attribute name="type" use="required" type="oauthTokenTypeType"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="oauthTokenTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="accesstoken"/>
+      <xs:enumeration value="refreshtoken"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+
+</xs:schema>

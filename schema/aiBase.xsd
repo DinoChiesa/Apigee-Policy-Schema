@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           xmlns:xerces="http://xerces.apache.org"
+           xmlns:saxon="http://saxon.sf.net/"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:complexType name='aiModelArmor'>
+    <xs:sequence>
+      <xs:element name="TemplateName" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

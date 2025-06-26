@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="GenerateSAMLAssertion">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element name="Issuer" type="propertyBean"/>
+            <xs:element minOccurs='0' name="Subject" type="propertyBean"/>
+            <xs:element name="KeyStore" type="samlKeyStore"/>
+            <xs:element minOccurs='0' name="DigestMethod" type="nonEmptyString"/>
+            <xs:element minOccurs='0' name="SignatureAlgorithm" type="nonEmptyString"/>
+            <xs:element name="OutputVariable" type="samlOutputVariable"/>
+            <xs:element minOccurs='0' name="Template" type="samlTemplate"/>
+            <xs:element minOccurs='0' name="CanonicalizationAlgorithm" type="xs:anyURI"/>
+          </xs:all>
+          <xs:attribute name="ignoreContentType" use="optional" type="xs:boolean"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="samlKeyStore">
+    <xs:all>
+      <xs:element name="Name" type="propertyBean"/>
+      <xs:element name="Alias" type="propertyBean"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="samlOutputVariable">
+    <xs:all>
+      <xs:element minOccurs='1' name="Message" type="samlMessage"/>
+      <xs:element minOccurs='1' name="FlowVariable" type="nonEmptyString"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="samlMessage">
+    <xs:all>
+      <xs:element minOccurs='0' name="Namespaces" type='samlNamespaces'/>
+      <xs:element minOccurs='1' name="XPath" type="xs:string"/>
+    </xs:all>
+    <xs:attribute name="name" use="required" type="xs:NCName"/>
+    <xs:assert test="count(XPath) = 1 and count(Namespaces) le 1" />
+  </xs:complexType>
+
+  <xs:complexType name="samlNamespaces">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="Namespace" type="samlNamespace"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="samlNamespace">
+    <xs:simpleContent>
+      <xs:extension base="xs:anyURI">
+        <xs:attribute name="prefix" use="required" type="xs:NCName" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="samlTemplate">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ignoreUnresolvedVariables" use="optional" type="xs:boolean"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

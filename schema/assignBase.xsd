@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           xmlns:xerces="http://xerces.apache.org"
+           xmlns:saxon="http://saxon.sf.net/"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="authentication.xsd"/>
+
+  <xs:complexType name="assignVariable">
+    <xs:all>
+      <xs:element minOccurs='1' name="Name" type='xs:NCName'/>
+      <xs:element minOccurs='0' name="Ref" type='possiblyEmptyString'/>
+      <xs:element minOccurs='0' name="Value" type='xs:string'/>
+      <xs:element minOccurs='0' name="ResourceURL" type='nonJavaResourceURL'/>
+      <xs:element minOccurs='0' name="Template" type='propertyBean'/>
+    </xs:all>
+    <xs:assert test="count(Name) = 1"/>
+    <xs:assert test="count(Ref) = 1 or count(Value) = 1 or count(ResourceURL) = 1 or count(Template) = 1"/>
+    <xs:assert test="count(Ref) le 1 and count(Value) le 1 and count(ResourceURL) le 1 and count(Template) le 1"/>
+  </xs:complexType>
+
+<!--
+  <xs:complexType name="assignPayload">
+    <xs:sequence>
+      <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+    </xs:sequence>
+    <xs:attribute name="contentType" use="optional" type='xs:string'/>
+    <xs:attribute name="variablePrefix" use="optional" type='xs:string'/>
+    <xs:attribute name="variableSuffix" use="optional" type='xs:string'/>
+  </xs:complexType>
+-->
+
+  <xs:simpleType name="httpVerb">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PUT"/>
+      <xs:enumeration value="POST"/>
+      <xs:enumeration value="GET"/>
+      <xs:enumeration value="DELETE"/>
+      <xs:enumeration value="PATCH"/>
+      <xs:enumeration value="HEAD"/>
+      <xs:enumeration value="OPTIONS"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="httpVersion">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="1.0"/>
+      <xs:enumeration value="1.1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="assignSetRequest">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="Authentication" type="authentication"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="Headers" type="assignSetHeaders"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="FormParams" type="assignSetFormParams"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="QueryParams" type="assignSetQueryParams"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="Payload" type="messagePayload"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="Verb" type="httpVerb"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="Version" type="httpVersion"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="Path" type="xs:string"/>
+    </xs:all>
+    <xs:assert test="count(FormParams) le 1 and
+                     count(Headers) le 1 and
+                     count(Payload) le 1 and
+                     count(Verb) le 1 and
+                     count(QueryParams) le 1 and
+                     count(Path) le 1"/>
+  </xs:complexType>
+
+  <!--
+      This works if the statuscode is non-blank.
+      But blank is tolerated by Apigee.
+
+  <xs:simpleType name="statusCode">
+    <xs:restriction base="xs:integer">
+      <xs:minExclusive value="100"/>
+      <xs:maxExclusive value="1000"/>
+    </xs:restriction>
+  </xs:simpleType>
+  -->
+
+  <xs:simpleType name="statusCode">
+    <xs:restriction base="xs:string">
+      <!-- it's a message template -->
+      <!-- <xs:assertion test="$value = '' or ($value castable as xs:integer)"/> -->
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="laxBooleanType">
+    <xs:restriction base="xs:string">
+      <xs:assertion test="($value = '') or matches($value, '(true|false)')"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="namedBoolean">
+    <xs:simpleContent>
+      <xs:extension base="laxBooleanType">
+        <xs:attribute name="name" use="required" type="xs:NCName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="namedFormParams">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs="unbounded" name='FormParam' type="namedBoolean"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="namedQueryParams">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs="unbounded" name='QueryParam' type="namedBoolean"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="namedHeaders">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs="unbounded" name='Header' type="namedBoolean"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="assignSetHeaders">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Header" type="assignSetHeader"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="assignSetHeader">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="xs:NCName" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="assignSetFormParams">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="FormParam" type="assignSetFormParam"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="assignSetFormParam">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="xs:NCName" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="assignSetQueryParams">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="QueryParam" type="assignSetQueryParam"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="assignSetQueryParam">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" use="required" type="xs:NCName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="assignCopy">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="Headers">
+        <xs:alternative test="exists(Header)" type="namedHeaders"/>
+        <xs:alternative type="laxBooleanType"/>
+      </xs:element>
+      <xs:element name="FormParams">
+        <xs:alternative test="exists(FormParam)" type="namedFormParams"/>
+        <xs:alternative type="laxBooleanType"/>
+      </xs:element>
+      <xs:element name="QueryParams" >
+        <xs:alternative test="exists(QueryParam)" type="namedQueryParams"/>
+        <xs:alternative type="laxBooleanType"/>
+      </xs:element>
+      <xs:element name="Payload" type="laxBooleanType"/>
+      <xs:element name="Verb" type="laxBooleanType"/>
+      <xs:element name="Path" type="laxBooleanType"/>
+      <xs:element name="StatusCode" type="laxBooleanType"/>
+      <xs:element name="Version" type="laxBooleanType"/>
+    </xs:choice>
+    <xs:attribute name="source" use="required" type="nonEmptyString"/>
+  </xs:complexType>
+
+  <xs:complexType name="assignRemove">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="Headers">
+        <xs:alternative test="exists(Header)" type="namedHeaders"/>
+        <xs:alternative type="laxBooleanType"/>
+      </xs:element>
+      <xs:element name="FormParams">
+        <xs:alternative test="exists(FormParam)" type="namedFormParams"/>
+        <xs:alternative type="laxBooleanType"/>
+      </xs:element>
+      <xs:element name="QueryParams" >
+        <xs:alternative test="exists(QueryParam)" type="namedQueryParams"/>
+        <xs:alternative type="laxBooleanType"/>
+      </xs:element>
+      <xs:element name="Payload" type="laxBooleanType"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="assignAdd">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="Headers" type='assignAddHeaders'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="FormParams" type='assignAddFormParams'/>
+      <xs:element minOccurs='0' maxOccurs='1' name="QueryParams" type='assignAddQueryParams'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="assignAddHeaders">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name='Header' type="amNamedThing"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="assignAddFormParams">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name='FormParam' type="amNamedThing"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="assignAddQueryParams">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name='QueryParam' type="amNamedThing"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="amNamedThing">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="nonEmptyString"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+
+</xs:schema>

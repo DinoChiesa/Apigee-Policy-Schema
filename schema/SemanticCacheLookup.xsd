@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="SemanticCacheLookup">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" maxOccurs='1' name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="UserPromptSource" type='xs:string'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Embeddings" type='scEmbeddings'/>
+            <xs:element minOccurs='1' maxOccurs='1' name="SimilaritySearch" type='scSimilaritySearch'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="scEmbeddings">
+    <xs:all>
+      <xs:element minOccurs='1' maxOccurs='1' name='VertexAI' type="scEmbeddingsVertexAI"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="scEmbeddingsVertexAI">
+    <xs:sequence>
+      <xs:element minOccurs='1' maxOccurs='1' name="URL" type="xs:anyURI"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="scSimilaritySearch">
+    <xs:all>
+      <xs:element minOccurs='1' maxOccurs='1' name='VertexAI' type="scSimilarityVertexAI"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="scSimilarityVertexAI">
+    <xs:all>
+      <xs:element minOccurs='1' maxOccurs='1' name="URL" type="xs:anyURI"/>
+      <xs:element minOccurs='1' maxOccurs='1' name="DeployedIndexID" type='xs:string'/>
+      <xs:element minOccurs='1' maxOccurs='1' name="Threshold" type='scThreshold'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:simpleType name="scThreshold">
+    <xs:restriction base="xs:string">
+      <xs:assertion test="matches($value, '0\.\d+')"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

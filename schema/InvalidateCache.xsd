@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="cacheCommon.xsd"/>
+
+  <xs:element name="InvalidateCache">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" maxOccurs='1' name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element minOccurs="0" name="CacheResource" type="xs:NCName"/>
+            <xs:element minOccurs="0" name="Scope" type="cacheScopeType"/>
+            <xs:element name="CacheKey" type='cacheKey'/>
+            <xs:element minOccurs="0" name="PurgeChildEntries" type="xs:boolean"/>
+          </xs:all>
+          <xs:assert test="count(Scope) le 1 and count(CacheKey) = 1"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+
+</xs:schema>

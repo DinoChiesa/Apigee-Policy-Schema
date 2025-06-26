@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="CORS">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs="0" name="IgnoreUnresolvedVariables" type='xs:boolean'/>
+            <xs:element minOccurs='0' name="AllowOrigins" type="xs:string"/>
+            <xs:element minOccurs='0' name="AllowMethods" type="xs:string"/>
+            <xs:element minOccurs='0' name="AllowHeaders" type="xs:string"/>
+            <xs:element minOccurs='0' name="ExposeHeaders" type="xs:string"/>
+            <xs:element minOccurs='0' name="MaxAge" type="xs:integer"/>
+            <xs:element minOccurs='0' name="AllowCredentials" type="xs:boolean"/>
+            <xs:element minOccurs='0' name="GeneratePreflightResponse" type="xs:boolean"/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

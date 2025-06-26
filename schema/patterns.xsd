@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           xmlns:xerces="http://xerces.apache.org"
+           xmlns:saxon="http://saxon.sf.net/"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:complexType name="pattern">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="ignoreCase" type="xs:boolean"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="patternSet">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Pattern" type='pattern'/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="nameWithPatternSet">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Pattern" type='pattern'/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+
+</xs:schema>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:element name="SetIntegrationRequest">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='1' maxOccurs='1' name="ApiTrigger" type='propertyBean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="IntegrationName" type='propertyBean'/>
+            <xs:element minOccurs='1' maxOccurs='1' name="IntegrationRegion" type='propertyBean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Parameters" type='intParameters'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ProjectId" type='propertyBean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Request" type='nonEmptyString'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ScheduleTime" type='xs:string'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+
+  <xs:complexType name="intParameters">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='Parameter' type="intParameter"/>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='ParameterArray' type="intParameterArray"/>
+    </xs:all>
+    <xs:attribute name="substitutionVariableChar" use="optional" type='singleCharString'/>
+  </xs:complexType>
+
+  <xs:simpleType name="singleCharString">
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="1" />
+      <xs:minLength value="1" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="intParameter">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" use="required" type='nonEmptyString'/>
+        <xs:attribute name="type" use="required" type='intParamType'/>
+        <xs:attribute name="ref" use="optional" type='nonEmptyString'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="intParamType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="integer"/>
+      <xs:enumeration value="string"/>
+      <xs:enumeration value="boolean"/>
+      <xs:enumeration value="double"/>
+      <xs:enumeration value="json"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="intParameterArray">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='Value' type="propertyBean"/>
+    </xs:all>
+    <xs:attribute name="name" use="required" type='nonEmptyString'/>
+    <xs:attribute name="type" use="required" type='intParamArrayType'/>
+    <xs:attribute name="ref" use="optional" type='nonEmptyString'/>
+  </xs:complexType>
+
+  <xs:simpleType name="intParamArrayType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="integer"/>
+      <xs:enumeration value="string"/>
+      <xs:enumeration value="boolean"/>
+      <xs:enumeration value="double"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

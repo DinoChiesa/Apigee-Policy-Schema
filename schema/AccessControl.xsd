@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="AccessControl">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+        <xs:element name="IPRules" type="IPRules"/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="IPRules">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="MatchRule" type="MatchRule"/>
+    </xs:sequence>
+    <xs:attribute name="noRuleMatchAction" use="required" type="AllowOrDeny"/>
+  </xs:complexType>
+
+  <xs:simpleType name="AllowOrDeny">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ALLOW"/>
+      <xs:enumeration value="DENY"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="MatchRule">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" name="SourceAddress" type="SourceAddress"/>
+    </xs:sequence>
+    <xs:attribute name="action" use="required" type="AllowOrDeny"/>
+  </xs:complexType>
+
+
+  <xs:complexType name="SourceAddress">
+    <xs:simpleContent>
+      <xs:extension base="xs:NMTOKEN">
+        <xs:attribute name="mask" use="required" type="xs:integer"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

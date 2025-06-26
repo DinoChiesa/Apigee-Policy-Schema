@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+  <xs:include schemaLocation="authentication.xsd"/>
+
+  <xs:element name="ExternalCallout">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='0' maxOccurs='1' name="GrpcConnection" type="grpcConnection"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="TimeoutMs" type='castableAsInteger'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="Configurations" type='ecConfigurations'/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="grpcConnection">
+    <xs:sequence>
+      <xs:element minOccurs='1' maxOccurs='1' name="Server" type='grpcServerType'/>
+      <xs:element minOccurs="0" maxOccurs='1' name="Authentication" type='authentication'/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="grpcServerType">
+    <xs:attribute name="name" use="required" type="nonEmptyString"/>
+  </xs:complexType>
+
+  <xs:complexType name='ecConfigurations'>
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs="4" name="Property" type='ecConfigProperty'/>
+      <xs:element minOccurs='0' maxOccurs="unbounded" name="FlowVariable" type='nonEmptyString'/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name='ecConfigProperty'>
+    <xs:simpleContent>
+      <xs:extension base="xs:boolean">
+        <xs:attribute name="name" use="required" type="ecConfigPropertyName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="ecConfigPropertyName">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="with.request.content"/>
+      <xs:enumeration value="with.request.headers"/>
+      <xs:enumeration value="with.response.content"/>
+      <xs:enumeration value="with.response.headers"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>
