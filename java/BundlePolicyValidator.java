@@ -9,6 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.xml.XMLConstants;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -64,23 +69,11 @@ public class BundlePolicyValidator {
   // ==============================================================================
   // ==== ToolArgs ================================================================
 
-  private record ToolArgs(String sourceDir, String xsdFile, boolean insecure) {}
-
-  // AI! Modify this to accept an argument --xsdSource which will be a directory.
-  // Validate that it exists. (Re-use the logic already in place for validating the
-  // sourceDir).
-  //
-  // Also - for validating all of the XML files; for each file, the code must
-  // examine the root element of the XML file, then look in the directory
-  // specified by --xsdSource for a file with that name, with the .xsd
-  // extension. Eg, if the root element is Alpha, then you must look in
-  // --xsdSource for a file named Alpha.xsd .  And use THAT XSD for
-  // validating that XML file.
-  //
+  private record ToolArgs(String sourceDir, String xsdSourceDir, boolean insecure) {}
 
   private static ToolArgs parseArgs(String[] args) {
     String sourceDir = null;
-    String schemaFile = null;
+    String xsdSourceDir = null;
     boolean insecure = false;
 
     for (int i = 0; i < args.length; i++) {
@@ -94,19 +87,19 @@ public class BundlePolicyValidator {
           System.err.println("Error: missing directory for --source option.");
           System.exit(1);
         }
-      } else if ("--xsd".equals(arg)) {
+      } else if ("--xsdSource".equals(arg)) {
         if (i + 1 < args.length) {
-          schemaFile = args[++i];
+          xsdSourceDir = args[++i];
         } else {
-          System.err.println("Error: missing filename for --xsd option.");
+          System.err.println("Error: missing directory for --xsdSource option.");
           System.exit(1);
         }
       }
     }
 
-    if (schemaFile == null || sourceDir == null) {
+    if (xsdSourceDir == null || sourceDir == null) {
       System.err.println(
-          "Usage: java BundlePolicyValidator --xsd <schema.xsd> --source <directory> [--insecure]");
+          "Usage: java BundlePolicyValidator --xsdSource <directory> --source <directory> [--insecure]");
       System.exit(1);
     }
 
@@ -115,7 +108,12 @@ public class BundlePolicyValidator {
       System.err.printf("Error: source '%s' is not an existing directory.%n", sourceDir);
       System.exit(1);
     }
-    return new ToolArgs(sourceDir, schemaFile, insecure);
+    File xsdSource = new File(xsdSourceDir);
+    if (!xsdSource.exists() || !xsdSource.isDirectory()) {
+      System.err.printf("Error: xsdSource '%s' is not an existing directory.%n", xsdSourceDir);
+      System.exit(1);
+    }
+    return new ToolArgs(sourceDir, xsdSourceDir, insecure);
   }
 
   private static List<File> findXmlFiles(String sourceDir) throws IOException {
@@ -128,6 +126,24 @@ public class BundlePolicyValidator {
     }
   }
 
+  private static String getRootElementName(File xmlFile) throws IOException, XMLStreamException {
+    XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+    xmlInputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
+    xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+
+    try (InputStream in = new FileInputStream(xmlFile)) {
+      XMLEventReader reader = xmlInputFactory.createXMLEventReader(in);
+      while (reader.hasNext()) {
+        XMLEvent nextEvent = reader.nextEvent();
+        if (nextEvent.isStartElement()) {
+          StartElement startElement = nextEvent.asStartElement();
+          return startElement.getName().getLocalPart();
+        }
+      }
+    }
+    return null;
+  }
+
   public static void main(String[] args) throws Exception {
     ToolArgs toolArgs = parseArgs(args);
 
@@ -136,7 +152,6 @@ public class BundlePolicyValidator {
     if (toolArgs.insecure()) {
       sf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, false);
     }
-    Schema schema = sf.newSchema(new File(toolArgs.xsdFile()));
 
     List<File> filesToValidate = findXmlFiles(toolArgs.sourceDir());
     if (filesToValidate.isEmpty()) {
@@ -148,12 +163,30 @@ public class BundlePolicyValidator {
 
     for (File file : filesToValidate) {
       System.out.printf("Validating %s...%n", file.getPath());
-      var handler = new CollectingErrorHandler();
-      Validator validator = schema.newValidator();
-      validator.setErrorHandler(handler);
+      try {
+        String rootElementName = getRootElementName(file);
+        if (rootElementName == null) {
+          throw new IllegalStateException("Could not determine root element.");
+        }
 
-      try (InputStream inputStream = new FileInputStream(file)) {
-        validator.validate(new StreamSource(inputStream));
+        Path xsdPath = Paths.get(toolArgs.xsdSourceDir(), rootElementName + ".xsd");
+        File xsdFile = xsdPath.toFile();
+
+        if (!xsdFile.exists() || !xsdFile.isFile()) {
+          throw new IOException(
+              String.format(
+                  "Schema file not found for root element '%s': %s", rootElementName, xsdPath));
+        }
+
+        Schema schema = sf.newSchema(xsdFile);
+        Validator validator = schema.newValidator();
+        var handler = new CollectingErrorHandler();
+        validator.setErrorHandler(handler);
+
+        try (InputStream inputStream = new FileInputStream(file)) {
+          validator.validate(new StreamSource(inputStream));
+        }
+
         ValidationResult result = handler.getResult();
         if (result.hasErrors()) {
           allValid = false;
@@ -164,6 +197,7 @@ public class BundlePolicyValidator {
         for (ValidationMessage notice : result.notices()) {
           System.err.printf("[%s] %s%n", notice.type(), notice.exception());
         }
+
       } catch (Exception e) {
         allValid = false;
         System.err.printf("[fatal] %s%n", e.getMessage());
