@@ -15,6 +15,17 @@ import org.xml.sax.SAXParseException;
 public class SchemaValidatorTool {
   public SchemaValidatorTool() {}
 
+  public record ValidationResult(
+      List<SAXParseException> warnings, List<SAXParseException> errors) {
+    public boolean hasErrors() {
+      return !errors.isEmpty();
+    }
+
+    public boolean hasWarnings() {
+      return !warnings.isEmpty();
+    }
+  }
+
   static class CollectingErrorHandler implements ErrorHandler {
     private final List<SAXParseException> warnings = new ArrayList<>();
     private final List<SAXParseException> errors = new ArrayList<>();
@@ -48,22 +59,8 @@ public class SchemaValidatorTool {
       errors.add(exception);
     }
 
-    // AI! refactor the following three methods into one.  getResult().
-    // It should return an instance of a new ValidationResult record.
-    // It should contain
-    //   hasErrors() method - boolean
-    //   hasWarnings() method - boolean
-    // and the warnings and errors lists.
-    public boolean hasErrors() {
-      return !errors.isEmpty();
-    }
-
-    public List<SAXParseException> getErrors() {
-      return errors;
-    }
-
-    public List<SAXParseException> getWarnings() {
-      return warnings;
+    public ValidationResult getResult() {
+      return new ValidationResult(List.copyOf(warnings), List.copyOf(errors));
     }
   }
 
@@ -105,15 +102,17 @@ public class SchemaValidatorTool {
       validator.setErrorHandler(handler);
       validator.validate(new StreamSource(inputStream));
 
-      if (handler.hasErrors()) {
+      ValidationResult result = handler.getResult();
+
+      if (result.hasErrors()) {
         CollectingErrorHandler.logResult("WITH_ERRORS");
-        for (SAXParseException e : handler.getErrors()) {
+        for (SAXParseException e : result.errors()) {
           CollectingErrorHandler.log("error", e);
         }
       } else {
         CollectingErrorHandler.logResult("OK");
       }
-      for (SAXParseException e : handler.getWarnings()) {
+      for (SAXParseException e : result.warnings()) {
         CollectingErrorHandler.log("warning", e);
       }
 
@@ -123,6 +122,6 @@ public class SchemaValidatorTool {
       fatal = true;
     }
 
-    System.exit((handler.hasErrors() || fatal) ? 1 : 0);
+    System.exit((handler.getResult().hasErrors() || fatal) ? 1 : 0);
   }
 }
