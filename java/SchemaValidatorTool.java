@@ -48,6 +48,12 @@ public class SchemaValidatorTool {
       errors.add(exception);
     }
 
+    // AI! refactor the following three methods into one.  getResult().
+    // It should return an instance of a new ValidationResult record.
+    // It should contain
+    //   hasErrors() method - boolean
+    //   hasWarnings() method - boolean
+    // and the warnings and errors lists.
     public boolean hasErrors() {
       return !errors.isEmpty();
     }
