@@ -28,8 +28,12 @@ public class BundlePolicyValidator {
 
   public BundlePolicyValidator(ToolArgs toolArgs) throws SAXException {
     this.toolArgs = toolArgs;
+    // AI! exract creation of the schemaFactory into a method, and defer
+    // execution of that method until later in the run method, after
+    // having checked that there are XML files to process.
     this.schemaFactory = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
-    this.schemaFactory.setFeature("http://apache.org/xml/features/validation/cta-full-xpath-checking", true);
+    this.schemaFactory.setFeature(
+        "http://apache.org/xml/features/validation/cta-full-xpath-checking", true);
     if (toolArgs.insecure()) {
       this.schemaFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, false);
     }
@@ -127,6 +131,8 @@ public class BundlePolicyValidator {
     return new ToolArgs(sourceDir, xsdSourceDir, insecure);
   }
 
+  // ==============================================================================
+
   private List<File> findXmlFiles() throws IOException {
     try (Stream<Path> paths = Files.walk(Paths.get(this.toolArgs.sourceDir()))) {
       return paths
@@ -159,7 +165,7 @@ public class BundlePolicyValidator {
     List<File> filesToValidate = findXmlFiles();
     if (filesToValidate.isEmpty()) {
       System.out.println("No XML files found in the specified directory.");
-      System.exit(0);
+      System.exit(1);
     }
 
     boolean allValid = true;
