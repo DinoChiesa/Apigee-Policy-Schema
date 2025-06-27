@@ -99,7 +99,8 @@ public class BundlePolicyValidator {
 
     if (xsdSourceDir == null || sourceDir == null) {
       System.err.println(
-          "Usage: java BundlePolicyValidator --xsdSource <directory> --source <directory> [--insecure]");
+          "Usage: java BundlePolicyValidator --xsdSource <directory> --source <directory>"
+              + " [--insecure]");
       System.exit(1);
     }
 
@@ -147,6 +148,12 @@ public class BundlePolicyValidator {
   public static void main(String[] args) throws Exception {
     ToolArgs toolArgs = parseArgs(args);
 
+    // AI! Refactor this logic to use instance methods.
+    // The logic should be like:
+    //    var tool = new BundlePolicyValidator(toolArgs);
+    //    tool.run();
+    //
+    // And within the run method, place all of this logic.
     SchemaFactory sf = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
     sf.setFeature("http://apache.org/xml/features/validation/cta-full-xpath-checking", true);
     if (toolArgs.insecure()) {
