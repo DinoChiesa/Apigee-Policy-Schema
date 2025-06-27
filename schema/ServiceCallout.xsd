@@ -35,8 +35,8 @@
     </xs:choice>
     <xs:attribute name="clearPayload" type="xs:boolean"/>
     <xs:attribute name="variable" type="xs:NCName"/>
-    <xs:assert test="count(IgnoreUnresolvedVariables) &lt;= 1 and
-                     count(Set) &lt;= 1"/>
+    <xs:assert test="count(IgnoreUnresolvedVariables) &lt;= 1"/>
+    <!-- multiple instances of Set is OK -->
   </xs:complexType>
 
   <xs:complexType name="HTTPTargetConnection">
