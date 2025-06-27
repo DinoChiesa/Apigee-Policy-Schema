@@ -155,6 +155,11 @@ public class BundlePolicyValidator {
     }
   }
 
+  // AI! Instead of finding all XML files, look only in a particular directory.
+  // First try the directory "policies" beneath sourceDir; if that does not exist
+  // then look in "apiproxy/policies"; if that does not exist, then look in
+  // "sharedflowbundle/policies". IF that does not exist, then fail and
+  // exit with status code = 1.
   private List<File> findXmlFiles() throws IOException {
     try (Stream<Path> paths = Files.walk(Paths.get(this.toolArgs.sourceDir()))) {
       return paths
@@ -209,10 +214,9 @@ public class BundlePolicyValidator {
 
     if (schema == null) {
       Path xsdPath = Paths.get(this.toolArgs.xsdSourceDir(), rootElementName + ".xsd");
-      String message =
+      handler.addFatalError(
           String.format(
-              "Schema file not found for root element '%s': %s", rootElementName, xsdPath);
-      handler.addFatalError(message);
+              "Schema file not found for root element '%s': %s", rootElementName, xsdPath));
       return handler.getResult();
     }
 
