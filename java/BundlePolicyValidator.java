@@ -190,6 +190,12 @@ public class BundlePolicyValidator {
         }
 
         Schema schema = this.schemaFactory.newSchema(xsdFile);
+
+        // AI! Extract the validation logic into a separate instance method.
+        // Re-use the same handler for each validation, such that all validation
+        // messages for any XML file are collected into the same handler.
+        //
+
         Validator validator = schema.newValidator();
         var handler = new CollectingErrorHandler();
         validator.setErrorHandler(handler);
