@@ -15,8 +15,7 @@ import org.xml.sax.SAXParseException;
 public class SchemaValidatorTool {
   public SchemaValidatorTool() {}
 
-  public record ValidationResult(
-      List<SAXParseException> warnings, List<SAXParseException> errors) {
+  public record ValidationResult(List<SAXParseException> warnings, List<SAXParseException> errors) {
     public boolean hasErrors() {
       return !errors.isEmpty();
     }
@@ -68,6 +67,11 @@ public class SchemaValidatorTool {
     String fileName = null;
     String schemaFile = null;
     boolean insecure = false;
+
+    // AI! Modify the argument handling here to avoid the use of the =
+    // within the arguments.  So that correct usage would be:
+    //
+    //    java SchemaValidatorTool --xsd schema.xsd --xml doc.xml [--insecure]
 
     for (String str : args) {
       if ("--insecure".equals(str)) {
