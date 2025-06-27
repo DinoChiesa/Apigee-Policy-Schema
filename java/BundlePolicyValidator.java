@@ -23,7 +23,17 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 public class BundlePolicyValidator {
-  public BundlePolicyValidator() {}
+  private final ToolArgs toolArgs;
+  private final SchemaFactory schemaFactory;
+
+  public BundlePolicyValidator(ToolArgs toolArgs) throws SAXException {
+    this.toolArgs = toolArgs;
+    this.schemaFactory = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
+    this.schemaFactory.setFeature("http://apache.org/xml/features/validation/cta-full-xpath-checking", true);
+    if (toolArgs.insecure()) {
+      this.schemaFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, false);
+    }
+  }
 
   // ==============================================================================
   // ==== Validation Results ======================================================
@@ -117,8 +127,8 @@ public class BundlePolicyValidator {
     return new ToolArgs(sourceDir, xsdSourceDir, insecure);
   }
 
-  private static List<File> findXmlFiles(String sourceDir) throws IOException {
-    try (Stream<Path> paths = Files.walk(Paths.get(sourceDir))) {
+  private List<File> findXmlFiles() throws IOException {
+    try (Stream<Path> paths = Files.walk(Paths.get(this.toolArgs.sourceDir()))) {
       return paths
           .filter(Files::isRegularFile)
           .filter(path -> path.toString().toLowerCase().endsWith(".xml"))
@@ -127,7 +137,7 @@ public class BundlePolicyValidator {
     }
   }
 
-  private static String getRootElementName(File xmlFile) throws IOException, XMLStreamException {
+  private String getRootElementName(File xmlFile) throws IOException, XMLStreamException {
     XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
     xmlInputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
     xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
@@ -145,22 +155,8 @@ public class BundlePolicyValidator {
     return null;
   }
 
-  public static void main(String[] args) throws Exception {
-    ToolArgs toolArgs = parseArgs(args);
-
-    // AI! Refactor this logic to use instance methods.
-    // The logic should be like:
-    //    var tool = new BundlePolicyValidator(toolArgs);
-    //    tool.run();
-    //
-    // And within the run method, place all of this logic.
-    SchemaFactory sf = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
-    sf.setFeature("http://apache.org/xml/features/validation/cta-full-xpath-checking", true);
-    if (toolArgs.insecure()) {
-      sf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, false);
-    }
-
-    List<File> filesToValidate = findXmlFiles(toolArgs.sourceDir());
+  public void run() throws Exception {
+    List<File> filesToValidate = findXmlFiles();
     if (filesToValidate.isEmpty()) {
       System.out.println("No XML files found in the specified directory.");
       System.exit(0);
@@ -176,7 +172,7 @@ public class BundlePolicyValidator {
           throw new IllegalStateException("Could not determine root element.");
         }
 
-        Path xsdPath = Paths.get(toolArgs.xsdSourceDir(), rootElementName + ".xsd");
+        Path xsdPath = Paths.get(this.toolArgs.xsdSourceDir(), rootElementName + ".xsd");
         File xsdFile = xsdPath.toFile();
 
         if (!xsdFile.exists() || !xsdFile.isFile()) {
@@ -185,7 +181,7 @@ public class BundlePolicyValidator {
                   "Schema file not found for root element '%s': %s", rootElementName, xsdPath));
         }
 
-        Schema schema = sf.newSchema(xsdFile);
+        Schema schema = this.schemaFactory.newSchema(xsdFile);
         Validator validator = schema.newValidator();
         var handler = new CollectingErrorHandler();
         validator.setErrorHandler(handler);
@@ -214,5 +210,11 @@ public class BundlePolicyValidator {
     }
 
     System.exit(allValid ? 0 : 1);
+  }
+
+  public static void main(String[] args) throws Exception {
+    ToolArgs toolArgs = parseArgs(args);
+    var tool = new BundlePolicyValidator(toolArgs);
+    tool.run();
   }
 }
