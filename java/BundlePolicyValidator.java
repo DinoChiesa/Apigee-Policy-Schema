@@ -41,6 +41,7 @@ import org.xml.sax.SAXParseException;
 public class BundlePolicyValidator {
   private final ToolArgs toolArgs;
   private SchemaFactory schemaFactory;
+  private final Map<String, Schema> schemaCache = new LinkedHashMap<>();
 
   public BundlePolicyValidator(ToolArgs toolArgs) {
     this.toolArgs = toolArgs;
@@ -66,6 +67,11 @@ public class BundlePolicyValidator {
   // ==== XSD Validation Error Handler ============================================
   static class CollectingErrorHandler implements ErrorHandler {
     private final List<ValidationMessage> notices = new ArrayList<>();
+
+    public void addFatalError(String message) {
+      SAXParseException e = new SAXParseException(message, null);
+      notices.add(new ValidationMessage(e, "fatalError"));
+    }
 
     @Override
     public void warning(SAXParseException exception) throws SAXException {
@@ -177,6 +183,20 @@ public class BundlePolicyValidator {
     return null;
   }
 
+  private Schema getSchema(String rootElementName) throws SAXException {
+    if (this.schemaCache.containsKey(rootElementName)) {
+      return this.schemaCache.get(rootElementName);
+    }
+    Path xsdPath = Paths.get(this.toolArgs.xsdSourceDir(), rootElementName + ".xsd");
+    File xsdFile = xsdPath.toFile();
+    if (!xsdFile.exists() || !xsdFile.isFile()) {
+      return null;
+    }
+    Schema schema = this.schemaFactory.newSchema(xsdFile);
+    this.schemaCache.put(rootElementName, schema);
+    return schema;
+  }
+
   private ValidationResult validateFile(File file)
       throws SAXException, IOException, XMLStreamException {
     String rootElementName = getRootElementName(file);
@@ -184,33 +204,19 @@ public class BundlePolicyValidator {
       throw new IllegalStateException("Could not determine root element.");
     }
 
-    // AI! It is "expensive" to create a new schema with sf.newSchema().
-    // Therefore, for each xsdFile used, insert the schema into a
-    // Map<String,Schema> to allow re-use of the schema on potential subsequent
-    // policies. Extract the call to sf.newSchema() and the management of
-    // the cache of schema, into a new instance method.  The usage syntax for
-    // that method should be something like
-    //
-    // Schema schema = getSchema(rootElementName);
-    //
-    // If a schema by that name cannot be found, do not throw an
-    // exception. Instead add an error to the handler for this file. You may
-    // need to adjust the definition of the CollectingErrorHandler to support
-    // this behavior.
+    CollectingErrorHandler handler = new CollectingErrorHandler();
+    Schema schema = getSchema(rootElementName);
 
-    Path xsdPath = Paths.get(this.toolArgs.xsdSourceDir(), rootElementName + ".xsd");
-    File xsdFile = xsdPath.toFile();
-
-    if (!xsdFile.exists() || !xsdFile.isFile()) {
-      throw new IOException(
+    if (schema == null) {
+      Path xsdPath = Paths.get(this.toolArgs.xsdSourceDir(), rootElementName + ".xsd");
+      String message =
           String.format(
-              "Schema file not found for root element '%s': %s", rootElementName, xsdPath));
+              "Schema file not found for root element '%s': %s", rootElementName, xsdPath);
+      handler.addFatalError(message);
+      return handler.getResult();
     }
 
-    Schema schema = this.schemaFactory.newSchema(xsdFile);
     Validator validator = schema.newValidator();
-    CollectingErrorHandler handler = new CollectingErrorHandler();
-
     validator.setErrorHandler(handler);
 
     try (InputStream inputStream = new FileInputStream(file)) {
