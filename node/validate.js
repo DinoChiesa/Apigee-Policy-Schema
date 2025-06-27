@@ -14,25 +14,48 @@
 //
 
 import libxmljs from "libxmljs";
+import fs from "fs";
+import path from "path";
 
-// AI>> modify this to accept command-line arguments:
-// --xsd PATHNAME_OF_XSD
-// --xml PATHNAME_OF_XML
-//
-// If either of these parameters are not present,
-// print a helpful message and exit. AI!
+const getArg = (argName) => {
+  const argIndex = process.argv.indexOf(argName);
+  if (argIndex > -1 && process.argv.length > argIndex + 1) {
+    return process.argv[argIndex + 1];
+  }
+  return null;
+};
+
+const schemaPath = getArg("--xsd");
+const xmlPath = getArg("--xml");
+
+if (!schemaPath || !xmlPath) {
+  const scriptName = path.basename(process.argv[1]);
+  console.error(
+    `Usage: node ${scriptName} --xsd <PATHNAME_OF_XSD> --xml <PATHNAME_OF_XML>`
+  );
+  process.exit(1);
+}
 
 try {
-  const schema = libxml.parseXml(fs.readFileSync(schemaPath, "utf8"));
+  const schemaString = fs.readFileSync(schemaPath, "utf8");
+  const schema = libxmljs.parseXml(schemaString);
 
-  const doc = libxml.parseXml(document);
-  const valid = doc.validate(schema);
-  if (!valid) {
-    console.error("XML did not validate against XSD schema!", {
-      errors: doc.validationErrors,
+  const xmlString = fs.readFileSync(xmlPath, "utf8");
+  const doc = libxmljs.parseXml(xmlString);
+
+  if (doc.validate(schema)) {
+    console.log(`${xmlPath} validates against ${schemaPath}.`);
+  } else {
+    console.error(`${xmlPath} fails to validate against ${schemaPath}.`);
+    console.error("Validation errors:");
+    doc.validationErrors.forEach((error) => {
+      console.error(
+        `  line ${error.line}, col ${error.column}: ${error.message.trim()}`
+      );
     });
+    process.exit(1);
   }
-  return valid;
 } catch (e) {
-  throw e;
+  console.error(`An error occurred: ${e.message}`);
+  process.exit(1);
 }
