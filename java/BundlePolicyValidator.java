@@ -20,7 +20,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import javax.xml.XMLConstants;
 import javax.xml.stream.XMLEventReader;
@@ -212,41 +214,51 @@ public class BundlePolicyValidator {
 
     createSchemaFactory();
 
-    boolean allValid = true;
+    Map<String, ValidationResult> validationResults = new LinkedHashMap<>();
+    Map<String, Exception> fatalErrors = new LinkedHashMap<>();
 
     for (File file : filesToValidate) {
       System.out.printf("Validating %s...%n", file.getPath());
       try {
-
-        // AI!  collect ValidationResult for each file and store it in a
-        // Map<String,ValidationResult>.
-        // Report results only after the loop covering all files is complete.
-        validateFile(file);
-
-        // List<ValidationMessage> allNotices = handler.getResult().notices();
-        // List<ValidationMessage> noticesForThisFile =
-        //     allNotices.subList(noticeCountBefore, allNotices.size());
-        //
-        // boolean hasErrors =
-        //     noticesForThisFile.stream()
-        //         .anyMatch(n -> "error".equals(n.type()) || "fatalError".equals(n.type()));
-        //
-        // if (hasErrors) {
-        //   allValid = false;
-        //   System.out.printf("result: WITH_ERRORS%n");
-        // } else {
-        //   System.out.printf("result: OK%n");
-        // }
-        // for (ValidationMessage notice : noticesForThisFile) {
-        //   System.err.printf("[%s] %s%n", notice.type(), notice.exception());
-        // }
-
+        ValidationResult result = validateFile(file);
+        validationResults.put(file.getPath(), result);
       } catch (Exception e) {
-        allValid = false;
-        System.err.printf("[fatal] %s%n", e.getMessage());
-        System.out.printf("result: FATAL_ERROR%n");
+        fatalErrors.put(file.getPath(), e);
       }
-      System.out.printf("----%n");
+    }
+
+    System.out.printf("%n==================== Validation Report ====================%n");
+
+    boolean allValid = true;
+
+    for (Map.Entry<String, ValidationResult> entry : validationResults.entrySet()) {
+      String filePath = entry.getKey();
+      ValidationResult result = entry.getValue();
+
+      System.out.printf("File: %s%n", filePath);
+      if (result.hasErrors()) {
+        allValid = false;
+        System.out.printf("  result: WITH_ERRORS%n");
+      } else {
+        System.out.printf("  result: OK%n");
+      }
+
+      for (ValidationMessage notice : result.notices()) {
+        System.err.printf("    [%s] %s%n", notice.type(), notice.exception());
+      }
+      System.out.printf("-------------------------------------------------------%n");
+    }
+
+    if (!fatalErrors.isEmpty()) {
+      allValid = false;
+      System.out.printf("Fatal Errors Encountered:%n");
+      for (Map.Entry<String, Exception> entry : fatalErrors.entrySet()) {
+        String filePath = entry.getKey();
+        Exception e = entry.getValue();
+        System.out.printf("File: %s%n", filePath);
+        System.err.printf("  [fatal] %s%n", e.getMessage());
+        System.out.printf("-------------------------------------------------------%n");
+      }
     }
 
     System.exit(allValid ? 0 : 1);
