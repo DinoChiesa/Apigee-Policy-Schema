@@ -155,13 +155,27 @@ public class BundlePolicyValidator {
     }
   }
 
-  // AI! Instead of finding all XML files, look only in a particular directory.
-  // First try the directory "policies" beneath sourceDir; if that does not exist
-  // then look in "apiproxy/policies"; if that does not exist, then look in
-  // "sharedflowbundle/policies". IF that does not exist, then fail and
-  // exit with status code = 1.
   private List<File> findXmlFiles() throws IOException {
-    try (Stream<Path> paths = Files.walk(Paths.get(this.toolArgs.sourceDir()))) {
+    String[] policiesDirs = {"policies", "apiproxy/policies", "sharedflowbundle/policies"};
+
+    Path sourcePath = Paths.get(this.toolArgs.sourceDir());
+    Path policiesPath = null;
+
+    for (String dir : policiesDirs) {
+      Path currentPath = sourcePath.resolve(dir);
+      if (Files.exists(currentPath) && Files.isDirectory(currentPath)) {
+        policiesPath = currentPath;
+        break;
+      }
+    }
+
+    if (policiesPath == null) {
+      System.err.println("Error: Could not find a 'policies' directory in the source.");
+      System.err.println("Searched for: policies, apiproxy/policies, sharedflowbundle/policies");
+      System.exit(1);
+    }
+
+    try (Stream<Path> paths = Files.list(policiesPath)) {
       return paths
           .filter(Files::isRegularFile)
           .filter(path -> path.toString().toLowerCase().endsWith(".xml"))
