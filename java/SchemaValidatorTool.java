@@ -65,12 +65,13 @@ public class SchemaValidatorTool {
     }
   }
 
-  public static void main(String[] args) throws Exception {
+  private record ToolArgs(String xmlFile, String xsdFile, boolean insecure) {}
+
+  private static ToolArgs parseArgs(String[] args) {
     String fileName = null;
     String schemaFile = null;
     boolean insecure = false;
 
-    // AI! Extract the argument parsing logic out into a separate method.
     for (int i = 0; i < args.length; i++) {
       String arg = args[i];
       if ("--insecure".equals(arg)) {
@@ -97,19 +98,24 @@ public class SchemaValidatorTool {
           "Usage: java SchemaValidatorTool --xsd <schema.xsd> --xml <doc.xml> [--insecure]");
       System.exit(1);
     }
+    return new ToolArgs(fileName, schemaFile, insecure);
+  }
 
-    InputStream inputStream = new FileInputStream(fileName);
+  public static void main(String[] args) throws Exception {
+    ToolArgs toolArgs = parseArgs(args);
+
+    InputStream inputStream = new FileInputStream(toolArgs.xmlFile());
 
     var handler = new CollectingErrorHandler();
     boolean fatal = false;
 
     try {
       SchemaFactory sf = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
-      if (insecure) {
+      if (toolArgs.insecure()) {
         sf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, false);
       }
 
-      Schema schema = sf.newSchema(new File(schemaFile));
+      Schema schema = sf.newSchema(new File(toolArgs.xsdFile()));
       Validator validator = schema.newValidator();
 
       validator.setErrorHandler(handler);
