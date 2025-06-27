@@ -15,24 +15,20 @@ import org.xml.sax.SAXParseException;
 public class SchemaValidatorTool {
   public SchemaValidatorTool() {}
 
-  public record ValidationResult(List<SAXParseException> warnings, List<SAXParseException> errors) {
+  public record ValidationNotice(SAXParseException exception, String type) {}
+
+  public record ValidationResult(List<ValidationNotice> notices) {
     public boolean hasErrors() {
-      return !errors.isEmpty();
+      return notices.stream().anyMatch(n -> "error".equals(n.type()) || "fatalError".equals(n.type()));
     }
 
     public boolean hasWarnings() {
-      return !warnings.isEmpty();
+      return notices.stream().anyMatch(n -> "warning".equals(n.type()));
     }
   }
 
   static class CollectingErrorHandler implements ErrorHandler {
-    // AI! Convert the seprate warnings and errors lists to a single
-    // list called "notices". Each notice should be a Pair of
-    // SAXParseException, type, where type is "warning", "error", "fatalError".
-    // Modify the ValidationResult record accordingly.
-
-    private final List<SAXParseException> warnings = new ArrayList<>();
-    private final List<SAXParseException> errors = new ArrayList<>();
+    private final List<ValidationNotice> notices = new ArrayList<>();
 
     private static void logResult(String msg) {
       System.out.printf("result: %s\n", msg);
@@ -50,21 +46,21 @@ public class SchemaValidatorTool {
 
     @Override
     public void warning(SAXParseException exception) throws SAXException {
-      warnings.add(exception);
+      notices.add(new ValidationNotice(exception, "warning"));
     }
 
     @Override
     public void error(SAXParseException exception) throws SAXException {
-      errors.add(exception);
+      notices.add(new ValidationNotice(exception, "error"));
     }
 
     @Override
     public void fatalError(SAXParseException exception) throws SAXException {
-      errors.add(exception);
+      notices.add(new ValidationNotice(exception, "fatalError"));
     }
 
     public ValidationResult getResult() {
-      return new ValidationResult(List.copyOf(warnings), List.copyOf(errors));
+      return new ValidationResult(List.copyOf(notices));
     }
   }
 
@@ -121,14 +117,11 @@ public class SchemaValidatorTool {
 
       if (result.hasErrors()) {
         CollectingErrorHandler.logResult("WITH_ERRORS");
-        for (SAXParseException e : result.errors()) {
-          CollectingErrorHandler.log("error", e);
-        }
       } else {
         CollectingErrorHandler.logResult("OK");
       }
-      for (SAXParseException e : result.warnings()) {
-        CollectingErrorHandler.log("warning", e);
+      for (ValidationNotice notice : result.notices()) {
+        CollectingErrorHandler.log(notice.type(), notice.exception());
       }
 
     } catch (Exception e) {
