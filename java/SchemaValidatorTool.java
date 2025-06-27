@@ -26,6 +26,11 @@ public class SchemaValidatorTool {
   }
 
   static class CollectingErrorHandler implements ErrorHandler {
+    // AI! Convert the seprate warnings and errors lists to a single
+    // list called "notices". Each notice should be a Pair of
+    // SAXParseException, type, where type is "warning", "error", "fatalError".
+    // Modify the ValidationResult record accordingly.
+
     private final List<SAXParseException> warnings = new ArrayList<>();
     private final List<SAXParseException> errors = new ArrayList<>();
 
