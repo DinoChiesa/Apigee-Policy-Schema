@@ -1,8 +1,13 @@
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.xml.XMLConstants;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
@@ -12,8 +17,8 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-public class SchemaValidatorTool {
-  public SchemaValidatorTool() {}
+public class BundlePolicyValidator {
+  public BundlePolicyValidator() {}
 
   // ==============================================================================
   // ==== Validation Results ======================================================
@@ -59,12 +64,10 @@ public class SchemaValidatorTool {
   // ==============================================================================
   // ==== ToolArgs ================================================================
 
-  // AI! modify this to accept a --source argument, instead of an --xml argument.
-  // The source argument must be a directory that exists. Validate it.
-  private record ToolArgs(String xmlFile, String xsdFile, boolean insecure) {}
+  private record ToolArgs(String sourceDir, String xsdFile, boolean insecure) {}
 
   private static ToolArgs parseArgs(String[] args) {
-    String fileName = null;
+    String sourceDir = null;
     String schemaFile = null;
     boolean insecure = false;
 
@@ -72,11 +75,11 @@ public class SchemaValidatorTool {
       String arg = args[i];
       if ("--insecure".equals(arg)) {
         insecure = true;
-      } else if ("--xml".equals(arg)) {
+      } else if ("--source".equals(arg)) {
         if (i + 1 < args.length) {
-          fileName = args[++i];
+          sourceDir = args[++i];
         } else {
-          System.err.println("Error: missing filename for --xml option.");
+          System.err.println("Error: missing directory for --source option.");
           System.exit(1);
         }
       } else if ("--xsd".equals(arg)) {
@@ -89,50 +92,74 @@ public class SchemaValidatorTool {
       }
     }
 
-    if (schemaFile == null || fileName == null) {
+    if (schemaFile == null || sourceDir == null) {
       System.err.println(
-          "Usage: java SchemaValidatorTool --xsd <schema.xsd> --xml <doc.xml> [--insecure]");
+          "Usage: java BundlePolicyValidator --xsd <schema.xsd> --source <directory> [--insecure]");
       System.exit(1);
     }
-    return new ToolArgs(fileName, schemaFile, insecure);
+
+    File source = new File(sourceDir);
+    if (!source.exists() || !source.isDirectory()) {
+      System.err.printf("Error: source '%s' is not an existing directory.%n", sourceDir);
+      System.exit(1);
+    }
+    return new ToolArgs(sourceDir, schemaFile, insecure);
   }
 
+  private static List<File> findXmlFiles(String sourceDir) throws IOException {
+    try (Stream<Path> paths = Files.walk(Paths.get(sourceDir))) {
+      return paths
+          .filter(Files::isRegularFile)
+          .filter(path -> path.toString().toLowerCase().endsWith(".xml"))
+          .map(Path::toFile)
+          .toList();
+    }
+  }
 
   public static void main(String[] args) throws Exception {
     ToolArgs toolArgs = parseArgs(args);
-    var handler = new CollectingErrorHandler();
-    var tool = new SchemaValidatorTool(toolArgs.xsdFile(), toolArgs.insecure())
-    boolean valid = false;
 
-    try (InputStream inputStream = new FileInputStream(toolArgs.xmlFile())) {
-      SchemaFactory sf = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
-      sf.setFeature("http://apache.org/xml/features/validation/cta-full-xpath-checking", true);
-      if (toolArgs.insecure()) {
-        sf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, false);
-      }
+    SchemaFactory sf = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
+    sf.setFeature("http://apache.org/xml/features/validation/cta-full-xpath-checking", true);
+    if (toolArgs.insecure()) {
+      sf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, false);
+    }
+    Schema schema = sf.newSchema(new File(toolArgs.xsdFile()));
 
-      Schema schema = sf.newSchema(new File(toolArgs.xsdFile()));
-      Validator validator = schema.newValidator();
-
-      validator.setErrorHandler(handler);
-      validator.validate(new StreamSource(inputStream));
-
-      ValidationResult result = handler.getResult();
-
-      if (result.hasErrors()) {
-        System.out.printf("result: WITH_ERRORS%n");
-      } else {
-        System.out.printf("result: OK%n");
-        valid = true;
-      }
-      for (ValidationMessage notice : result.notices()) {
-        System.err.printf("[%s] %s%n", notice.type(), notice.exception());
-      }
-    } catch (Exception e) {
-      System.err.printf("[fatal] %s%n", e.getMessage());
-      System.out.printf("result: FATAL_ERROR%n");
+    List<File> filesToValidate = findXmlFiles(toolArgs.sourceDir());
+    if (filesToValidate.isEmpty()) {
+      System.out.println("No XML files found in the specified directory.");
+      System.exit(0);
     }
 
-    System.exit(valid ? 0 : 1);
+    boolean allValid = true;
+
+    for (File file : filesToValidate) {
+      System.out.printf("Validating %s...%n", file.getPath());
+      var handler = new CollectingErrorHandler();
+      Validator validator = schema.newValidator();
+      validator.setErrorHandler(handler);
+
+      try (InputStream inputStream = new FileInputStream(file)) {
+        validator.validate(new StreamSource(inputStream));
+        ValidationResult result = handler.getResult();
+        if (result.hasErrors()) {
+          allValid = false;
+          System.out.printf("result: WITH_ERRORS%n");
+        } else {
+          System.out.printf("result: OK%n");
+        }
+        for (ValidationMessage notice : result.notices()) {
+          System.err.printf("[%s] %s%n", notice.type(), notice.exception());
+        }
+      } catch (Exception e) {
+        allValid = false;
+        System.err.printf("[fatal] %s%n", e.getMessage());
+        System.out.printf("result: FATAL_ERROR%n");
+      }
+      System.out.printf("----%n");
+    }
+
+    System.exit(allValid ? 0 : 1);
   }
 }
