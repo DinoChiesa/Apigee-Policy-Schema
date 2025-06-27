@@ -1,3 +1,17 @@
+// Copyright © 2025 Google LLC.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -161,7 +175,7 @@ public class BundlePolicyValidator {
     return null;
   }
 
-  private void validateFile(File file, CollectingErrorHandler handler)
+  private ValidationResult validateFile(File file)
       throws SAXException, IOException, XMLStreamException {
     String rootElementName = getRootElementName(file);
     if (rootElementName == null) {
@@ -179,11 +193,14 @@ public class BundlePolicyValidator {
 
     Schema schema = this.schemaFactory.newSchema(xsdFile);
     Validator validator = schema.newValidator();
+    CollectingErrorHandler handler = new CollectingErrorHandler();
+
     validator.setErrorHandler(handler);
 
     try (InputStream inputStream = new FileInputStream(file)) {
       validator.validate(new StreamSource(inputStream));
     }
+    return handler.getResult();
   }
 
   public void run() throws Exception {
@@ -196,32 +213,33 @@ public class BundlePolicyValidator {
     createSchemaFactory();
 
     boolean allValid = true;
-    var handler = new CollectingErrorHandler();
 
     for (File file : filesToValidate) {
       System.out.printf("Validating %s...%n", file.getPath());
       try {
-        int noticeCountBefore = handler.getResult().notices().size();
 
-        validateFile(file, handler);
+        // AI!  collect ValidationResult for each file and store it in a
+        // Map<String,ValidationResult>.
+        // Report results only after the loop covering all files is complete.
+        validateFile(file);
 
-        List<ValidationMessage> allNotices = handler.getResult().notices();
-        List<ValidationMessage> noticesForThisFile =
-            allNotices.subList(noticeCountBefore, allNotices.size());
-
-        boolean hasErrors =
-            noticesForThisFile.stream()
-                .anyMatch(n -> "error".equals(n.type()) || "fatalError".equals(n.type()));
-
-        if (hasErrors) {
-          allValid = false;
-          System.out.printf("result: WITH_ERRORS%n");
-        } else {
-          System.out.printf("result: OK%n");
-        }
-        for (ValidationMessage notice : noticesForThisFile) {
-          System.err.printf("[%s] %s%n", notice.type(), notice.exception());
-        }
+        // List<ValidationMessage> allNotices = handler.getResult().notices();
+        // List<ValidationMessage> noticesForThisFile =
+        //     allNotices.subList(noticeCountBefore, allNotices.size());
+        //
+        // boolean hasErrors =
+        //     noticesForThisFile.stream()
+        //         .anyMatch(n -> "error".equals(n.type()) || "fatalError".equals(n.type()));
+        //
+        // if (hasErrors) {
+        //   allValid = false;
+        //   System.out.printf("result: WITH_ERRORS%n");
+        // } else {
+        //   System.out.printf("result: OK%n");
+        // }
+        // for (ValidationMessage notice : noticesForThisFile) {
+        //   System.err.printf("[%s] %s%n", notice.type(), notice.exception());
+        // }
 
       } catch (Exception e) {
         allValid = false;
