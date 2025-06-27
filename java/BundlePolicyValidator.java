@@ -66,6 +66,18 @@ public class BundlePolicyValidator {
 
   private record ToolArgs(String sourceDir, String xsdFile, boolean insecure) {}
 
+  // AI! Modify this to accept an argument --xsdSource which will be a directory.
+  // Validate that it exists. (Re-use the logic already in place for validating the
+  // sourceDir).
+  //
+  // Also - for validating all of the XML files; for each file, the code must
+  // examine the root element of the XML file, then look in the directory
+  // specified by --xsdSource for a file with that name, with the .xsd
+  // extension. Eg, if the root element is Alpha, then you must look in
+  // --xsdSource for a file named Alpha.xsd .  And use THAT XSD for
+  // validating that XML file.
+  //
+
   private static ToolArgs parseArgs(String[] args) {
     String sourceDir = null;
     String schemaFile = null;
