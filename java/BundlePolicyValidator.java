@@ -184,6 +184,20 @@ public class BundlePolicyValidator {
       throw new IllegalStateException("Could not determine root element.");
     }
 
+    // AI! It is "expensive" to create a new schema with sf.newSchema().
+    // Therefore, for each xsdFile used, insert the schema into a
+    // Map<String,Schema> to allow re-use of the schema on potential subsequent
+    // policies. Extract the call to sf.newSchema() and the management of
+    // the cache of schema, into a new instance method.  The usage syntax for
+    // that method should be something like
+    //
+    // Schema schema = getSchema(rootElementName);
+    //
+    // If a schema by that name cannot be found, do not throw an
+    // exception. Instead add an error to the handler for this file. You may
+    // need to adjust the definition of the CollectingErrorHandler to support
+    // this behavior.
+
     Path xsdPath = Paths.get(this.toolArgs.xsdSourceDir(), rootElementName + ".xsd");
     File xsdFile = xsdPath.toFile();
 
