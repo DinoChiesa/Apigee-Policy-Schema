@@ -15,11 +15,12 @@ import org.xml.sax.SAXParseException;
 public class SchemaValidatorTool {
   public SchemaValidatorTool() {}
 
-  public record ValidationNotice(SAXParseException exception, String type) {}
+  public record ValidationMessage(SAXParseException exception, String type) {}
 
-  public record ValidationResult(List<ValidationNotice> notices) {
+  public record ValidationResult(List<ValidationMessage> notices) {
     public boolean hasErrors() {
-      return notices.stream().anyMatch(n -> "error".equals(n.type()) || "fatalError".equals(n.type()));
+      return notices.stream()
+          .anyMatch(n -> "error".equals(n.type()) || "fatalError".equals(n.type()));
     }
 
     public boolean hasWarnings() {
@@ -28,7 +29,7 @@ public class SchemaValidatorTool {
   }
 
   static class CollectingErrorHandler implements ErrorHandler {
-    private final List<ValidationNotice> notices = new ArrayList<>();
+    private final List<ValidationMessage> notices = new ArrayList<>();
 
     private static void logResult(String msg) {
       System.out.printf("result: %s\n", msg);
@@ -46,17 +47,17 @@ public class SchemaValidatorTool {
 
     @Override
     public void warning(SAXParseException exception) throws SAXException {
-      notices.add(new ValidationNotice(exception, "warning"));
+      notices.add(new ValidationMessage(exception, "warning"));
     }
 
     @Override
     public void error(SAXParseException exception) throws SAXException {
-      notices.add(new ValidationNotice(exception, "error"));
+      notices.add(new ValidationMessage(exception, "error"));
     }
 
     @Override
     public void fatalError(SAXParseException exception) throws SAXException {
-      notices.add(new ValidationNotice(exception, "fatalError"));
+      notices.add(new ValidationMessage(exception, "fatalError"));
     }
 
     public ValidationResult getResult() {
@@ -69,6 +70,7 @@ public class SchemaValidatorTool {
     String schemaFile = null;
     boolean insecure = false;
 
+    // AI! Extract the argument parsing logic out into a separate method.
     for (int i = 0; i < args.length; i++) {
       String arg = args[i];
       if ("--insecure".equals(arg)) {
@@ -120,7 +122,7 @@ public class SchemaValidatorTool {
       } else {
         CollectingErrorHandler.logResult("OK");
       }
-      for (ValidationNotice notice : result.notices()) {
+      for (ValidationMessage notice : result.notices()) {
         CollectingErrorHandler.log(notice.type(), notice.exception());
       }
 
