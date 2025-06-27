@@ -161,6 +161,31 @@ public class BundlePolicyValidator {
     return null;
   }
 
+  private void validateFile(File file, CollectingErrorHandler handler)
+      throws SAXException, IOException, XMLStreamException {
+    String rootElementName = getRootElementName(file);
+    if (rootElementName == null) {
+      throw new IllegalStateException("Could not determine root element.");
+    }
+
+    Path xsdPath = Paths.get(this.toolArgs.xsdSourceDir(), rootElementName + ".xsd");
+    File xsdFile = xsdPath.toFile();
+
+    if (!xsdFile.exists() || !xsdFile.isFile()) {
+      throw new IOException(
+          String.format(
+              "Schema file not found for root element '%s': %s", rootElementName, xsdPath));
+    }
+
+    Schema schema = this.schemaFactory.newSchema(xsdFile);
+    Validator validator = schema.newValidator();
+    validator.setErrorHandler(handler);
+
+    try (InputStream inputStream = new FileInputStream(file)) {
+      validator.validate(new StreamSource(inputStream));
+    }
+  }
+
   public void run() throws Exception {
     List<File> filesToValidate = findXmlFiles();
     if (filesToValidate.isEmpty()) {
@@ -171,47 +196,30 @@ public class BundlePolicyValidator {
     createSchemaFactory();
 
     boolean allValid = true;
+    var handler = new CollectingErrorHandler();
 
     for (File file : filesToValidate) {
       System.out.printf("Validating %s...%n", file.getPath());
       try {
-        String rootElementName = getRootElementName(file);
-        if (rootElementName == null) {
-          throw new IllegalStateException("Could not determine root element.");
-        }
+        int noticeCountBefore = handler.getResult().notices().size();
 
-        Path xsdPath = Paths.get(this.toolArgs.xsdSourceDir(), rootElementName + ".xsd");
-        File xsdFile = xsdPath.toFile();
+        validateFile(file, handler);
 
-        if (!xsdFile.exists() || !xsdFile.isFile()) {
-          throw new IOException(
-              String.format(
-                  "Schema file not found for root element '%s': %s", rootElementName, xsdPath));
-        }
+        List<ValidationMessage> allNotices = handler.getResult().notices();
+        List<ValidationMessage> noticesForThisFile =
+            allNotices.subList(noticeCountBefore, allNotices.size());
 
-        Schema schema = this.schemaFactory.newSchema(xsdFile);
+        boolean hasErrors =
+            noticesForThisFile.stream()
+                .anyMatch(n -> "error".equals(n.type()) || "fatalError".equals(n.type()));
 
-        // AI! Extract the validation logic into a separate instance method.
-        // Re-use the same handler for each validation, such that all validation
-        // messages for any XML file are collected into the same handler.
-        //
-
-        Validator validator = schema.newValidator();
-        var handler = new CollectingErrorHandler();
-        validator.setErrorHandler(handler);
-
-        try (InputStream inputStream = new FileInputStream(file)) {
-          validator.validate(new StreamSource(inputStream));
-        }
-
-        ValidationResult result = handler.getResult();
-        if (result.hasErrors()) {
+        if (hasErrors) {
           allValid = false;
           System.out.printf("result: WITH_ERRORS%n");
         } else {
           System.out.printf("result: OK%n");
         }
-        for (ValidationMessage notice : result.notices()) {
+        for (ValidationMessage notice : noticesForThisFile) {
           System.err.printf("[%s] %s%n", notice.type(), notice.exception());
         }
 
