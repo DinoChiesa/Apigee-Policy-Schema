@@ -68,24 +68,30 @@ public class SchemaValidatorTool {
     String schemaFile = null;
     boolean insecure = false;
 
-    // AI! Modify the argument handling here to avoid the use of the =
-    // within the arguments.  So that correct usage would be:
-    //
-    //    java SchemaValidatorTool --xsd schema.xsd --xml doc.xml [--insecure]
-
-    for (String str : args) {
-      if ("--insecure".equals(str)) {
+    for (int i = 0; i < args.length; i++) {
+      String arg = args[i];
+      if ("--insecure".equals(arg)) {
         insecure = true;
-      } else if (str.startsWith("--xml=")) {
-        fileName = str.replaceFirst("--xml=", "");
-      } else if (str.startsWith("--xsd=")) {
-        schemaFile = str.replaceFirst("--xsd=", "");
+      } else if ("--xml".equals(arg)) {
+        if (i + 1 < args.length) {
+          fileName = args[++i];
+        } else {
+          System.err.println("Error: missing filename for --xml option.");
+          System.exit(1);
+        }
+      } else if ("--xsd".equals(arg)) {
+        if (i + 1 < args.length) {
+          schemaFile = args[++i];
+        } else {
+          System.err.println("Error: missing filename for --xsd option.");
+          System.exit(1);
+        }
       }
     }
 
     if (schemaFile == null || fileName == null) {
       System.err.println(
-          "Usage: java SchemaValidatorTool --xsd=<schema.xsd> --xml=<doc.xml> [--insecure]");
+          "Usage: java SchemaValidatorTool --xsd <schema.xsd> --xml <doc.xml> [--insecure]");
       System.exit(1);
     }
 
