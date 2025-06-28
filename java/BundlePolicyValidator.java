@@ -20,10 +20,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.xml.XMLConstants;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
@@ -43,6 +46,8 @@ public class BundlePolicyValidator {
   private SchemaFactory schemaFactory;
   private final Map<String, Schema> schemaCache = new LinkedHashMap<>();
   private Path policiesPath;
+  private Path effectiveSourcePath;
+  private Path tempDirToDelete = null;
 
   public BundlePolicyValidator(ToolArgs toolArgs) {
     this.toolArgs = toolArgs;
@@ -97,10 +102,10 @@ public class BundlePolicyValidator {
   // ==============================================================================
   // ==== ToolArgs ================================================================
 
-  private record ToolArgs(String sourceDir, String xsdSourceDir, boolean insecure) {}
+  private record ToolArgs(String source, String xsdSourceDir, boolean insecure) {}
 
   private static ToolArgs parseArgs(String[] args) {
-    String sourceDir = null;
+    String source = null;
     String xsdSourceDir = null;
     boolean insecure = false;
 
@@ -110,9 +115,9 @@ public class BundlePolicyValidator {
         insecure = true;
       } else if ("--source".equals(arg)) {
         if (i + 1 < args.length) {
-          sourceDir = args[++i];
+          source = args[++i];
         } else {
-          System.err.println("Error: missing directory for --source option.");
+          System.err.println("Error: missing file or directory for --source option.");
           System.exit(1);
         }
       } else if ("--xsdSource".equals(arg)) {
@@ -125,57 +130,101 @@ public class BundlePolicyValidator {
       }
     }
 
-    if (xsdSourceDir == null || sourceDir == null) {
+    if (xsdSourceDir == null || source == null) {
       System.err.println(
-          "Usage: java BundlePolicyValidator --xsdSource <directory> --source <directory>"
+          "Usage: java BundlePolicyValidator --xsdSource <directory> --source <file|directory>"
               + " [--insecure]");
       System.exit(1);
     }
-
-    // AI! Modify the logic slightly so that the --source argument takes either
-    // a directory (as currently implemented), OR, it takes the name of a .zip
-    // file which contains a "proxy bundle".
-    //
-    // In case of the latter, the program should
-    //  - create a temporary directory
-    //  - unzip the zip file in that temporary directory
-    //  - verify that the structure of the unzipped contents looks something like this:
-    //
-    //     apiproxy/
-    //     apiproxy/API-PROXY-NAME-HERE.xml
-    //     apiproxy/policies/
-    //     apiproxy/policies/NAME-OF-POLICY-1.xml
-    //     apiproxy/policies/NAME-OF-POLICY-2.xml
-    //     apiproxy/policies/...
-    //     apiproxy/resources/
-    //     ...
-    //
-    // If unzip fails or if the unzipped archive does not look like that, then
-    // delete the temp directory, print an error message and exit with status 1.
-    //
-    // If the unzipped archive DOES result in a structure like that, then
-    // treat the temporary directory as the "source dir" and proceed with
-    // the logic as currently implemented.
-    //
-    // Extract all of this into a separate instance method.
-    //
-    // In all cases make sure to remove the temporary directory at the
-    // completion of the program.
-
-    File source = new File(sourceDir);
-    if (!source.exists() || !source.isDirectory()) {
-      System.err.printf("Error: source '%s' is not an existing directory.%n", sourceDir);
-      System.exit(1);
-    }
-    File xsdSource = new File(xsdSourceDir);
-    if (!xsdSource.exists() || !xsdSource.isDirectory()) {
-      System.err.printf("Error: xsdSource '%s' is not an existing directory.%n", xsdSourceDir);
-      System.exit(1);
-    }
-    return new ToolArgs(sourceDir, xsdSourceDir, insecure);
+    return new ToolArgs(source, xsdSourceDir, insecure);
   }
 
   // ==============================================================================
+
+  private void prepareSource() throws IOException {
+    File xsdSource = new File(toolArgs.xsdSourceDir());
+    if (!xsdSource.exists() || !xsdSource.isDirectory()) {
+      System.err.printf("Error: xsdSource '%s' is not an existing directory.%n", toolArgs.xsdSourceDir());
+      System.exit(1);
+    }
+
+    Path sourceInputPath = Paths.get(toolArgs.source());
+    if (!Files.exists(sourceInputPath)) {
+      System.err.printf("Error: source '%s' does not exist.%n", sourceInputPath);
+      System.exit(1);
+    }
+
+    if (Files.isDirectory(sourceInputPath)) {
+      this.effectiveSourcePath = sourceInputPath;
+    } else if (Files.isRegularFile(sourceInputPath)
+        && sourceInputPath.toString().toLowerCase().endsWith(".zip")) {
+      this.tempDirToDelete = Files.createTempDirectory("bundle-validator-");
+      this.effectiveSourcePath = this.tempDirToDelete;
+      try (ZipInputStream zis = new ZipInputStream(new FileInputStream(sourceInputPath.toFile()))) {
+        ZipEntry zipEntry = zis.getNextEntry();
+        while (zipEntry != null) {
+          Path newPath = this.effectiveSourcePath.resolve(zipEntry.getName());
+          if (!newPath.normalize().startsWith(this.effectiveSourcePath.normalize())) {
+            throw new IOException("Bad zip entry: " + zipEntry.getName());
+          }
+          if (zipEntry.isDirectory()) {
+            Files.createDirectories(newPath);
+          } else {
+            if (newPath.getParent() != null) {
+              if (Files.notExists(newPath.getParent())) {
+                Files.createDirectories(newPath.getParent());
+              }
+            }
+            Files.copy(zis, newPath);
+          }
+          zis.closeEntry();
+          zipEntry = zis.getNextEntry();
+        }
+      } catch (java.util.zip.ZipException e) {
+        System.err.printf("Error: Could not unzip '%s'. File may be corrupt.%n", sourceInputPath);
+        System.exit(1);
+      }
+    } else {
+      System.err.printf(
+          "Error: source '%s' must be a directory or a .zip file.%n", sourceInputPath);
+      System.exit(1);
+    }
+
+    String[] policiesDirs = {"policies", "apiproxy/policies", "sharedflowbundle/policies"};
+    for (String dir : policiesDirs) {
+      Path currentPath = this.effectiveSourcePath.resolve(dir);
+      if (Files.exists(currentPath) && Files.isDirectory(currentPath)) {
+        this.policiesPath = currentPath;
+        break;
+      }
+    }
+
+    if (this.policiesPath == null) {
+      if (this.tempDirToDelete != null) {
+        System.err.printf(
+            "Error: The zip file '%s' does not appear to be a valid bundle.%n", sourceInputPath);
+        System.err.println(
+            "Could not find a 'policies' directory in standard locations within the archive.");
+      } else {
+        System.err.println("Error: Could not find a 'policies' directory in the source.");
+        System.err.println("Searched for: policies, apiproxy/policies, sharedflowbundle/policies");
+      }
+      System.exit(1);
+    }
+  }
+
+  private void cleanup() {
+    if (this.tempDirToDelete != null) {
+      try {
+        try (Stream<Path> walk = Files.walk(this.tempDirToDelete)) {
+          walk.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+        }
+      } catch (IOException e) {
+        System.err.printf(
+            "Warning: Failed to delete temporary directory %s%n", this.tempDirToDelete);
+      }
+    }
+  }
 
   private void createSchemaFactory() throws SAXException {
     this.schemaFactory = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
@@ -187,22 +236,8 @@ public class BundlePolicyValidator {
   }
 
   private List<File> findXmlFiles() throws IOException {
-    String[] policiesDirs = {"policies", "apiproxy/policies", "sharedflowbundle/policies"};
-
-    Path sourcePath = Paths.get(this.toolArgs.sourceDir());
-
-    for (String dir : policiesDirs) {
-      Path currentPath = sourcePath.resolve(dir);
-      if (Files.exists(currentPath) && Files.isDirectory(currentPath)) {
-        this.policiesPath = currentPath;
-        break;
-      }
-    }
-
     if (this.policiesPath == null) {
-      System.err.println("Error: Could not find a 'policies' directory in the source.");
-      System.err.println("Searched for: policies, apiproxy/policies, sharedflowbundle/policies");
-      System.exit(1);
+      throw new IllegalStateException("policiesPath is not set. Call prepareSource() first.");
     }
 
     try (Stream<Path> paths = Files.list(this.policiesPath)) {
@@ -274,10 +309,11 @@ public class BundlePolicyValidator {
   }
 
   public void run() throws Exception {
+    prepareSource();
     List<File> filesToValidate = findXmlFiles();
     if (filesToValidate.isEmpty()) {
-      System.out.println("No XML files found in the specified directory.");
-      System.exit(1);
+      System.out.printf("No XML files found in %s%n", this.policiesPath);
+      System.exit(0);
     }
 
     createSchemaFactory();
@@ -338,6 +374,10 @@ public class BundlePolicyValidator {
   public static void main(String[] args) throws Exception {
     ToolArgs toolArgs = parseArgs(args);
     var tool = new BundlePolicyValidator(toolArgs);
-    tool.run();
+    try {
+      tool.run();
+    } finally {
+      tool.cleanup();
+    }
   }
 }
