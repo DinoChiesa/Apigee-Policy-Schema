@@ -131,6 +131,13 @@ if __name__ == "__main__":
             sys.exit(1)
 
         source_input_path = pathlib.Path(args.source)
+
+        # AI! Extract all of the logic from here until the xml_files variable
+        # is set, into a separate method. The logic should use something like
+        # this to invoke the method:
+        #
+        #    xml_files = get_policy_files(source_input_path)
+        # 
         source_path = None  # This will be the path to the directory to be validated.
 
         if not source_input_path.exists():
