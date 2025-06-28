@@ -101,6 +101,94 @@ def validate_with_schema(
     return errors
 
 
+def get_policy_files_from_bundle(
+    source_input_path: pathlib.Path,
+) -> Tuple[List[pathlib.Path], pathlib.Path, Optional[str]]:
+    """
+    Finds all policy XML files from a source directory or zip bundle.
+
+    Handles unzipping archives into a temporary directory if necessary.
+    Exits the script with an error if the source is invalid or the policies
+    directory cannot be found.
+
+    Args:
+        source_input_path: Path to the source directory or .zip file.
+
+    Returns:
+        A tuple containing:
+        - A sorted list of paths to the policy XML files.
+        - The path to the policies directory.
+        - The name of the temporary directory if one was created, otherwise None.
+    """
+    temp_dir_name = None
+    source_path = None  # This will be the path to the directory to be validated.
+
+    if not source_input_path.exists():
+        print(f"Error: Source not found at '{source_input_path}'", file=sys.stderr)
+        sys.exit(1)
+
+    if source_input_path.is_dir():
+        source_path = source_input_path
+    elif source_input_path.is_file() and str(source_input_path).endswith(".zip"):
+        if not zipfile.is_zipfile(source_input_path):
+            print(
+                f"Error: Source file '{source_input_path}' is not a valid zip file.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        temp_dir_name = tempfile.mkdtemp()
+        source_path = pathlib.Path(temp_dir_name)
+
+        try:
+            with zipfile.ZipFile(source_input_path, "r") as zip_ref:
+                zip_ref.extractall(source_path)
+        except zipfile.BadZipFile:
+            print(
+                f"Error: Could not unzip '{source_input_path}'. File may be corrupt.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+    else:
+        print(
+            f"Error: Source '{source_input_path}' must be a directory or a .zip file.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    policies_dir_options = [
+        "policies",
+        "apiproxy/policies",
+        "sharedflowbundle/policies",
+    ]
+    policies_path = None
+    for p_dir in policies_dir_options:
+        current_path = source_path.joinpath(p_dir)
+        if current_path.is_dir():
+            policies_path = current_path
+            break
+
+    if not policies_path:
+        if temp_dir_name:
+            print(
+                f"Error: The zip file '{source_input_path}' does not appear to be a valid bundle.",
+                file=sys.stderr,
+            )
+            print(
+                "Could not find a 'policies' directory in standard locations within the archive.",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                "Error: Could not find 'policies' directory in standard locations within source.",
+                file=sys.stderr,
+            )
+        sys.exit(1)
+
+    xml_files = sorted(list(policies_path.glob("*.xml")))
+    return xml_files, policies_path, temp_dir_name
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Validate all policy XML files in a bundle."
@@ -132,83 +220,15 @@ if __name__ == "__main__":
 
         source_input_path = pathlib.Path(args.source)
 
-        # AI! Extract all of the logic from here until the xml_files variable
-        # is set, into a separate method. The logic should use something like
-        # this to invoke the method:
-        #
-        #    xml_files = get_policy_files(source_input_path)
-        # 
-        source_path = None  # This will be the path to the directory to be validated.
-
-        if not source_input_path.exists():
-            print(f"Error: Source not found at '{source_input_path}'", file=sys.stderr)
-            sys.exit(1)
-
-        if source_input_path.is_dir():
-            source_path = source_input_path
-        elif source_input_path.is_file() and str(source_input_path).endswith(".zip"):
-            if not zipfile.is_zipfile(source_input_path):
-                print(
-                    f"Error: Source file '{source_input_path}' is not a valid zip file.",
-                    file=sys.stderr,
-                )
-                sys.exit(1)
-
-            temp_dir_name = tempfile.mkdtemp()
-            source_path = pathlib.Path(temp_dir_name)
-
-            try:
-                with zipfile.ZipFile(source_input_path, "r") as zip_ref:
-                    zip_ref.extractall(source_path)
-            except zipfile.BadZipFile:
-                print(
-                    f"Error: Could not unzip '{source_input_path}'. File may be corrupt.",
-                    file=sys.stderr,
-                )
-                sys.exit(1)
-        else:
-            print(
-                f"Error: Source '{source_input_path}' must be a directory or a .zip file.",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-
-        policies_dir_options = [
-            "policies",
-            "apiproxy/policies",
-            "sharedflowbundle/policies",
-        ]
-        policies_path = None
-        for p_dir in policies_dir_options:
-            current_path = source_path.joinpath(p_dir)
-            if current_path.is_dir():
-                policies_path = current_path
-                break
-
-        if not policies_path:
-            if temp_dir_name:
-                print(
-                    f"Error: The zip file '{source_input_path}' does not appear to be a valid bundle.",
-                    file=sys.stderr,
-                )
-                print(
-                    "Could not find a 'policies' directory in standard locations within the archive.",
-                    file=sys.stderr,
-                )
-            else:
-                print(
-                    "Error: Could not find 'policies' directory in standard locations within source.",
-                    file=sys.stderr,
-                )
-            sys.exit(1)
-
-        results = []
-        xml_files = sorted(list(policies_path.glob("*.xml")))
+        xml_files, policies_path, temp_dir_name = get_policy_files_from_bundle(
+            source_input_path
+        )
 
         if not xml_files:
             print(f"No XML files found in {policies_path}")
             sys.exit(0)
 
+        results = []
         schema_cache = {}
 
         for xml_file in xml_files:
