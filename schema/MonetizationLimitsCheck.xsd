@@ -46,20 +46,14 @@
 
   <xs:complexType name="mlFaultCopy">
     <xs:all>
-      <xs:element minOccurs='0' maxOccurs='1' name="Headers">
-        <xs:alternative test="exists(Header)" type="namedHeaders"/>
-        <xs:alternative type="laxBooleanType"/>
-      </xs:element>
+      <xs:element name="Headers" minOccurs='0' maxOccurs='1'    type="removeOrCopyHeaders"/>
       <xs:element minOccurs='0' maxOccurs='1' name="StatusCode" type="laxBooleanType"/>
     </xs:all>
   </xs:complexType>
 
   <xs:complexType name="mlFaultRemove">
     <xs:all>
-      <xs:element minOccurs='0' maxOccurs='1' name="Headers">
-        <xs:alternative test="exists(Header)" type="namedHeaders"/>
-        <xs:alternative type="laxBooleanType"/>
-      </xs:element>
+      <xs:element minOccurs='0' maxOccurs='1' name="Headers" type="removeOrCopyHeaders"/>
     </xs:all>
   </xs:complexType>
 

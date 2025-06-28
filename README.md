@@ -32,66 +32,21 @@ To use the schemas, you will need an XSD validator tool.
 These schemas are implemented using XSD 1.1. They rely on
 [xs:assert](https://www.w3.org/TR/xmlschema11-1/#cAssertions) (and xs:assertion)
 which were added to XSD in XSD v1.1. Therefore, you will need an XSD-1.1
-compliant validator to use them.  You can build a simple validator tool in
-Python using the xmlschema module, or in Java using its builtin JAXP. I've
-included an example python-based validator in this repo.
+compliant validator to use them.  I've included some example validators in this
+repo. You can also build your own in any language/platform that supports XSD 1.1
 
 > .NET does not natively support XML Schema Definition (XSD) 1.1. While
 > Microsoft's built-in XML tools support XSD 1.0, they don't include features
 > like assertions (xs:assert) and other features in XSD 1.1. To work with XSD
-> 1.1 in .NET, you'll need to use a third-party library like Saxon.
+> 1.1 in .NET, you'll need to use a third-party library like Saxon HE.
 
 
-## Example Validation Script
+## Example Validation Scripts
 
-This repository includes a Python script, `validate.py`, to validate a single XML
-file against one of the provided XSD schemas.
+This repository includes some examples for validating policy files, or bundles.
 
-### Pre-requisites
-
-- Python 3.13
-- xmlchema module (see the requirements.txt file)
-
-### Setup
-
-To use the script, you'll need to install its dependencies. It's recommended to
-use a Python virtual environment.
-
-1.  **Create and activate a virtual environment:**
-
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-
-2.  **Install the required packages:**
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-### Usage
-
-Once the dependencies are installed, you can run the script like this:
-
-```bash
-./validate.py --xsd schema/TheSchema.xsd --xml /path/to/your/policy.xml
-```
-
-For example, to validate a sample `AssignMessage` policy:
-
-```bash
-./validate.py --xsd schema/AssignMessage.xsd --xml /path/to/your/assign-message-policy.xml
-```
-
-## Practical Validation
-
-Probably, you will want a validator that does more than validate a single policy
-file against a single, specified Schema. Instead you will probably want
-something that examines pall of the policy files in a bundle, and then validates
-each one against the appropriate schema file provided here.
-
-A tool that does that, is, for the moment, left as an exercise for the reader.
+- [./py](python) - using the xmlschema module
+- [./java](java) - using XercesJ 2.12.2
 
 
 ## License
@@ -115,4 +70,3 @@ for responses to inquiries posted to that site.
   - ProxyEndpoint
   - TargetEndpoint
   - SharedflowBundle
-

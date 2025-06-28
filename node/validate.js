@@ -13,9 +13,10 @@
 // limitations under the License.
 //
 
-import libxmljs from "libxmljs";
-import fs from "fs";
-import path from "path";
+import xsdValidator from "xsd-schema-validator";
+import which from "which";
+import fs from "node:fs/promises";
+import path from "node:path";
 
 const getArg = (argName) => {
   const argIndex = process.argv.indexOf(argName);
@@ -24,35 +25,40 @@ const getArg = (argName) => {
   }
   return null;
 };
+const scriptName = () => path.basename(process.argv[1]);
 
 const schemaPath = getArg("--xsd");
 const xmlPath = getArg("--xml");
 
 if (!schemaPath || !xmlPath) {
-  const scriptName = path.basename(process.argv[1]);
   console.error(
-    `Usage: node ${scriptName} --xsd <PATHNAME_OF_XSD> --xml <PATHNAME_OF_XML>`
+    `Usage: node ${scriptName()} --xsd <PATHNAME_OF_XSD> --xml <PATHNAME_OF_XML>`,
   );
   process.exit(1);
 }
 
+const javaAvailable = () => {
+  const options = process.env.JAVA_HOME
+    ? { path: process.env.JAVA_HOME + "/bin" }
+    : {};
+
+  return which("javac", options);
+};
+
 try {
-  const schemaString = fs.readFileSync(schemaPath, "utf8");
-  const schema = libxmljs.parseXml(schemaString);
+  if (!javaAvailable()) {
+    console.error(
+      `Cannot run without javac. Maybe you need to set JAVA_HOME? or your PATH.`,
+    );
+    process.exit(1);
+  }
+  const xmlString = await fs.readFile(xmlPath, "utf-8");
+  const result = await xsdValidator.validateXML(xmlString, schemaPath);
 
-  const xmlString = fs.readFileSync(xmlPath, "utf8");
-  const doc = libxmljs.parseXml(xmlString);
-
-  if (doc.validate(schema)) {
+  if (result.valid) {
     console.log(`${xmlPath} validates against ${schemaPath}.`);
   } else {
     console.error(`${xmlPath} fails to validate against ${schemaPath}.`);
-    console.error("Validation errors:");
-    doc.validationErrors.forEach((error) => {
-      console.error(
-        `  line ${error.line}, col ${error.column}: ${error.message.trim()}`
-      );
-    });
     process.exit(1);
   }
 } catch (e) {

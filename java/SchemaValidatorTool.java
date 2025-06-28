@@ -1,3 +1,18 @@
+// Copyright © 2025 Google LLC.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -30,20 +45,6 @@ public class SchemaValidatorTool {
 
   static class CollectingErrorHandler implements ErrorHandler {
     private final List<ValidationMessage> notices = new ArrayList<>();
-
-    private static void logResult(String msg) {
-      System.out.printf("result: %s\n", msg);
-    }
-
-    private static void log(String type, String msg) {
-      System.err.printf("[%s] %s\n", type, msg);
-    }
-
-    private static void log(String type, SAXParseException e) {
-      log(
-          type,
-          String.format("%s (%d:%d)", e.getMessage(), e.getLineNumber(), e.getColumnNumber()));
-    }
 
     @Override
     public void warning(SAXParseException exception) throws SAXException {
@@ -103,14 +104,12 @@ public class SchemaValidatorTool {
 
   public static void main(String[] args) throws Exception {
     ToolArgs toolArgs = parseArgs(args);
-
-    InputStream inputStream = new FileInputStream(toolArgs.xmlFile());
-
     var handler = new CollectingErrorHandler();
-    boolean fatal = false;
+    boolean valid = false;
 
-    try {
+    try (InputStream inputStream = new FileInputStream(toolArgs.xmlFile())) {
       SchemaFactory sf = SchemaFactory.newInstance("http://www.w3.org/XML/XMLSchema/v1.1");
+      sf.setFeature("http://apache.org/xml/features/validation/cta-full-xpath-checking", true);
       if (toolArgs.insecure()) {
         sf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, false);
       }
@@ -124,20 +123,19 @@ public class SchemaValidatorTool {
       ValidationResult result = handler.getResult();
 
       if (result.hasErrors()) {
-        CollectingErrorHandler.logResult("WITH_ERRORS");
+        System.out.printf("result: WITH_ERRORS%n");
       } else {
-        CollectingErrorHandler.logResult("OK");
+        System.out.printf("result: OK%n");
+        valid = true;
       }
       for (ValidationMessage notice : result.notices()) {
-        CollectingErrorHandler.log(notice.type(), notice.exception());
+        System.err.printf("[%s] %s%n", notice.type(), notice.exception());
       }
-
     } catch (Exception e) {
-      CollectingErrorHandler.log("fatal", e.getMessage());
-      CollectingErrorHandler.logResult("FATAL_ERROR");
-      fatal = true;
+      System.err.printf("[fatal] %s%n", e.getMessage());
+      System.out.printf("result: FATAL_ERROR%n");
     }
 
-    System.exit((handler.getResult().hasErrors() || fatal) ? 1 : 0);
+    System.exit(valid ? 0 : 1);
   }
 }

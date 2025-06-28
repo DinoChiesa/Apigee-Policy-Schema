@@ -103,22 +103,49 @@
     </xs:simpleContent>
   </xs:complexType>
 
-  <xs:complexType name="namedFormParams">
-    <xs:sequence>
-      <xs:element minOccurs='0' maxOccurs="unbounded" name='FormParam' type="namedBoolean"/>
-    </xs:sequence>
+  <xs:complexType name="textXorChildren" abstract="true">
+    <xs:complexContent mixed="true">
+      <xs:restriction base="xs:anyType">
+        <xs:sequence>
+          <xs:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+        </xs:sequence>
+          <!-- This abstract type allows any child element. Derived types will restrict this. -->
+        <xs:assert test="not(exists(*)) or normalize-space(.) = ''"/>
+        <xs:assert test="normalize-space(.) = 'true' or
+                         normalize-space(.) = 'false' or
+                         normalize-space(.) = ''"/>
+      </xs:restriction>
+    </xs:complexContent>
   </xs:complexType>
 
-  <xs:complexType name="namedQueryParams">
-    <xs:sequence>
-      <xs:element minOccurs='0' maxOccurs="unbounded" name='QueryParam' type="namedBoolean"/>
-    </xs:sequence>
+  <xs:complexType name="removeOrCopyHeaders">
+    <xs:complexContent mixed="true">
+      <xs:restriction base="textXorChildren">
+        <xs:sequence>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="Header" type="namedBoolean"/>
+        </xs:sequence>
+      </xs:restriction>
+    </xs:complexContent>
   </xs:complexType>
 
-  <xs:complexType name="namedHeaders">
-    <xs:sequence>
-      <xs:element minOccurs='0' maxOccurs="unbounded" name='Header' type="namedBoolean"/>
-    </xs:sequence>
+  <xs:complexType name="removeOrCopyFormParams">
+    <xs:complexContent mixed="true">
+      <xs:restriction base="textXorChildren">
+        <xs:sequence>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="FormParam" type="namedBoolean"/>
+        </xs:sequence>
+      </xs:restriction>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="removeOrCopyQueryParams">
+    <xs:complexContent mixed="true">
+      <xs:restriction base="textXorChildren">
+        <xs:sequence>
+          <xs:element minOccurs="0" maxOccurs="unbounded" name="QueryParam" type="namedBoolean"/>
+        </xs:sequence>
+      </xs:restriction>
+    </xs:complexContent>
   </xs:complexType>
 
   <xs:complexType name="assignSetHeaders">
@@ -165,42 +192,24 @@
 
   <xs:complexType name="assignCopy">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
-      <xs:element name="Headers">
-        <xs:alternative test="exists(Header)" type="namedHeaders"/>
-        <xs:alternative type="laxBooleanType"/>
-      </xs:element>
-      <xs:element name="FormParams">
-        <xs:alternative test="exists(FormParam)" type="namedFormParams"/>
-        <xs:alternative type="laxBooleanType"/>
-      </xs:element>
-      <xs:element name="QueryParams" >
-        <xs:alternative test="exists(QueryParam)" type="namedQueryParams"/>
-        <xs:alternative type="laxBooleanType"/>
-      </xs:element>
-      <xs:element name="Payload" type="laxBooleanType"/>
-      <xs:element name="Verb" type="laxBooleanType"/>
-      <xs:element name="Path" type="laxBooleanType"/>
-      <xs:element name="StatusCode" type="laxBooleanType"/>
-      <xs:element name="Version" type="laxBooleanType"/>
+      <xs:element name="Headers"     type="removeOrCopyHeaders"/>
+      <xs:element name="FormParams"  type="removeOrCopyFormParams"/>
+      <xs:element name="QueryParams" type="removeOrCopyQueryParams"/>
+      <xs:element name="Payload"     type="laxBooleanType"/>
+      <xs:element name="Verb"        type="laxBooleanType"/>
+      <xs:element name="Path"        type="laxBooleanType"/>
+      <xs:element name="StatusCode"  type="laxBooleanType"/>
+      <xs:element name="Version"     type="laxBooleanType"/>
     </xs:choice>
     <xs:attribute name="source" use="required" type="nonEmptyString"/>
   </xs:complexType>
 
   <xs:complexType name="assignRemove">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
-      <xs:element name="Headers">
-        <xs:alternative test="exists(Header)" type="namedHeaders"/>
-        <xs:alternative type="laxBooleanType"/>
-      </xs:element>
-      <xs:element name="FormParams">
-        <xs:alternative test="exists(FormParam)" type="namedFormParams"/>
-        <xs:alternative type="laxBooleanType"/>
-      </xs:element>
-      <xs:element name="QueryParams" >
-        <xs:alternative test="exists(QueryParam)" type="namedQueryParams"/>
-        <xs:alternative type="laxBooleanType"/>
-      </xs:element>
-      <xs:element name="Payload" type="laxBooleanType"/>
+      <xs:element name="Headers"     type="removeOrCopyHeaders"/>
+      <xs:element name="FormParams"  type="removeOrCopyFormParams"/>
+      <xs:element name="QueryParams" type="removeOrCopyQueryParams"/>
+      <xs:element name="Payload"     type="laxBooleanType"/>
     </xs:choice>
   </xs:complexType>
 
@@ -237,6 +246,5 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
-
 
 </xs:schema>
