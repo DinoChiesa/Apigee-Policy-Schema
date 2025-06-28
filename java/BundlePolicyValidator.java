@@ -335,6 +335,7 @@ public class BundlePolicyValidator {
     System.out.printf("Policies directory: %s%n%n", this.policiesPath);
 
     boolean allValid = true;
+    long totalErrorCount = 0;
 
     for (Map.Entry<String, ValidationResult> entry : validationResults.entrySet()) {
       String absoluteFilePath = entry.getKey();
@@ -345,6 +346,10 @@ public class BundlePolicyValidator {
       if (result.hasErrors()) {
         allValid = false;
         System.out.printf("  result: WITH_ERRORS%n");
+        totalErrorCount +=
+            result.notices().stream()
+                .filter(n -> "error".equals(n.type()) || "fatalError".equals(n.type()))
+                .count();
       } else {
         System.out.printf("  result: OK%n");
       }
@@ -353,15 +358,11 @@ public class BundlePolicyValidator {
         System.err.printf("    [%s] %s%n", notice.type(), notice.exception());
       }
       System.out.printf("-------------------------------------------------------%n");
-      // AI! keep a tally of all the errors from any policy file, and if
-      // the total is non-zero, produce a message at the end here, providing
-      // that number. If there were 3 errors found, it should look like this:
-      //
-      // Validation finished with 3 errors.
     }
 
     if (!fatalErrors.isEmpty()) {
       allValid = false;
+      totalErrorCount += fatalErrors.size();
       System.out.printf("Fatal Errors Encountered:%n");
       for (Map.Entry<String, Exception> entry : fatalErrors.entrySet()) {
         String absoluteFilePath = entry.getKey();
@@ -372,6 +373,12 @@ public class BundlePolicyValidator {
         System.err.printf("  [fatal] %s%n", e.getMessage());
         System.out.printf("-------------------------------------------------------%n");
       }
+    }
+
+    if (totalErrorCount > 0) {
+      System.out.printf("%nValidation finished with %d errors.%n", totalErrorCount);
+    } else {
+      System.out.printf("%nAll policies validated successfully.%n");
     }
 
     System.exit(allValid ? 0 : 1);
