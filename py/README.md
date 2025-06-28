@@ -43,5 +43,11 @@ python ./validatePolicy.py --xsd schema/AssignMessage.xsd --xml /path/to/your/as
 To validate all of the policies within a bundle:
 
 ```bash
-python validateBundle.py --xsdSource ../schema --source /path/to/your/apoproxy
+python validateBundle.py --xsdSource ../schema --source /path/to/your/apiproxy
+```
+
+You can also specify a zipped proxy bundle:
+
+```bash
+python validateBundle.py --xsdSource ../schema --source /path/to/your/apiproxy-bundle.zip
 ```

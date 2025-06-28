@@ -5,7 +5,7 @@ the XML "Domain specific language" for Apigee X/hybrid policies.
 
 ## Background
 
-Previously, Google published a set of Schemas for Apigee at [this
+Some time back, Google published a set of Schemas for Apigee at [this
 link](https://github.com/apigee/api-platform-samples/tree/master/schemas).  But
 these schema are now outdated. They do not support recent extensions in the
 configuration possibilities for existing policies, nor do they include more
