@@ -35,14 +35,16 @@
   <xs:simpleType name="jwtSigningAlgorithmSpec">
     <xs:restriction base="xs:string">
       <!-- allow multiple algorithms -->
-      <xs:assertion test="every $alg in tokenize(., '\s*,\s*')
+      <xs:assertion test="every $alg in tokenize($value, '\s*,\s*')
                        satisfies $alg = ('RS256', 'RS384', 'RS512',
                        'PS256', 'PS384', 'PS512',
                        'HS256', 'HS384', 'HS512',
-                       'ES256', 'ES384', 'ES512') "/>
-      <!-- as long as all are in the same family -->
-      <xs:assertion test=" count(distinct-values(tokenize(., '\s*,\s*')/substring(., 1, 2))) le 1 "/>
-      </xs:restriction>
+                       'ES256', 'ES384', 'ES512') "
+                    xerces:message="Unsupported signing algorithm."/>
+      <xs:assertion test="every $alg in tokenize($value, '\s*,\s*')
+                       satisfies substring($value, 1, 2) = substring($alg, 1, 2)"
+                    xerces:message="All algorithms must be of the same family"/>
+    </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="KeyEncryptingAlgType">
