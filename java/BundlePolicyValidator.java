@@ -42,6 +42,7 @@ public class BundlePolicyValidator {
   private final ToolArgs toolArgs;
   private SchemaFactory schemaFactory;
   private final Map<String, Schema> schemaCache = new LinkedHashMap<>();
+  private Path policiesPath;
 
   public BundlePolicyValidator(ToolArgs toolArgs) {
     this.toolArgs = toolArgs;
@@ -159,23 +160,22 @@ public class BundlePolicyValidator {
     String[] policiesDirs = {"policies", "apiproxy/policies", "sharedflowbundle/policies"};
 
     Path sourcePath = Paths.get(this.toolArgs.sourceDir());
-    Path policiesPath = null;
 
     for (String dir : policiesDirs) {
       Path currentPath = sourcePath.resolve(dir);
       if (Files.exists(currentPath) && Files.isDirectory(currentPath)) {
-        policiesPath = currentPath;
+        this.policiesPath = currentPath;
         break;
       }
     }
 
-    if (policiesPath == null) {
+    if (this.policiesPath == null) {
       System.err.println("Error: Could not find a 'policies' directory in the source.");
       System.err.println("Searched for: policies, apiproxy/policies, sharedflowbundle/policies");
       System.exit(1);
     }
 
-    try (Stream<Path> paths = Files.list(policiesPath)) {
+    try (Stream<Path> paths = Files.list(this.policiesPath)) {
       return paths
           .filter(Files::isRegularFile)
           .filter(path -> path.toString().toLowerCase().endsWith(".xml"))
@@ -265,17 +265,16 @@ public class BundlePolicyValidator {
     }
 
     System.out.printf("%n==================== Validation Report ====================%n");
-    // AI! here, print out a header that states the resolved folder for
-    // policy files.   And, below, where filePath is emitted into the output,
-    // make the name relative to this resolved folder.
+    System.out.printf("Policies directory: %s%n%n", this.policiesPath);
 
     boolean allValid = true;
 
     for (Map.Entry<String, ValidationResult> entry : validationResults.entrySet()) {
-      String filePath = entry.getKey();
+      String absoluteFilePath = entry.getKey();
       ValidationResult result = entry.getValue();
+      Path relativePath = this.policiesPath.relativize(Paths.get(absoluteFilePath));
 
-      System.out.printf("File: %s%n", filePath);
+      System.out.printf("File: %s%n", relativePath);
       if (result.hasErrors()) {
         allValid = false;
         System.out.printf("  result: WITH_ERRORS%n");
@@ -293,9 +292,11 @@ public class BundlePolicyValidator {
       allValid = false;
       System.out.printf("Fatal Errors Encountered:%n");
       for (Map.Entry<String, Exception> entry : fatalErrors.entrySet()) {
-        String filePath = entry.getKey();
+        String absoluteFilePath = entry.getKey();
         Exception e = entry.getValue();
-        System.out.printf("File: %s%n", filePath);
+        Path relativePath = this.policiesPath.relativize(Paths.get(absoluteFilePath));
+
+        System.out.printf("File: %s%n", relativePath);
         System.err.printf("  [fatal] %s%n", e.getMessage());
         System.out.printf("-------------------------------------------------------%n");
       }
