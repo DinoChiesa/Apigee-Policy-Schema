@@ -39,10 +39,19 @@ to validate policy files against the Apigee schema.
         --xml ~/dev/my-bundle/apiproxy/policies/SC-Get-Identity-Token-from-IAM.xml
    ```
 
-   Check all of the policy files in a bundle against any of the possible Schemas available for Apigee:
+   Check all of the policy files in an "exploded bundle" against any of the
+   possible Schemas available for Apigee:
 
    ```sh
    java -classpath ./out:./vendor/*  BundlePolicyValidator \
         --xsdSource ../schema \
         --source ~/dev/my-bundle/apiproxy
+   ```
+
+   Check all of the policy files in a bundle zip:
+
+   ```sh
+   java -classpath ./out:./vendor/*  BundlePolicyValidator \
+        --xsdSource ../schema \
+        --source ~/dev/my-bundle/apiproxy-bundle.zip
    ```
