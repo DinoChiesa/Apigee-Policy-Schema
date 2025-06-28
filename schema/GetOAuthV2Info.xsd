@@ -14,6 +14,7 @@
             <xs:element minOccurs='0' name="AccessToken" type='propertyBean'/>
             <xs:element minOccurs='0' name="AuthorizationCode" type='propertyBean'/>
             <xs:element minOccurs='0' name="ClientId" type='propertyBean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="IgnoreAccessTokenStatus" type='xs:boolean'/>
           </xs:all>
           <xs:assert test="(count(AccessToken) = 1 and count(AuthorizationCode) = 0 and count(ClientId) = 0) or
                            (count(AccessToken) = 0 and count(AuthorizationCode) = 1 and count(ClientId) = 0) or

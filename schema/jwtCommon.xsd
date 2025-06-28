@@ -113,6 +113,7 @@
   </xs:complexType>
 
   <xs:complexType name="JWKS">
+    <xs:attribute name="ref" type="xs:string"/>
     <xs:attribute name="uri" type="xs:anyURI"/>
     <xs:attribute name="uriRef" type="xs:NCName"/>
   </xs:complexType>

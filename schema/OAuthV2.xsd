@@ -23,6 +23,7 @@
             <xs:element minOccurs='0' maxOccurs='1' name="ExpiresIn" type='oauthReffableInt'/>
             <xs:element minOccurs='0' maxOccurs='1' name="ExternalAccessToken" type='xs:string'/>
             <xs:element minOccurs='0' maxOccurs='1' name="ExternalAuthorization" type='xs:boolean'/>
+            <xs:element minOccurs='0' maxOccurs='1' name="ExternalAuthorizationCode" type='xs:string'/>
             <xs:element minOccurs='0' maxOccurs='1' name="ExternalRefreshToken" type='xs:string'/>
             <xs:element minOccurs='0' maxOccurs='1' name="GenerateResponse" type='oauthGenerateResponse'/>
             <xs:element minOccurs='0' maxOccurs='1' name="GenerateErrorResponse" type='oauthGenerateErrorResponse'/>
