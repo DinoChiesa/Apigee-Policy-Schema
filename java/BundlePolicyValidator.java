@@ -132,6 +132,36 @@ public class BundlePolicyValidator {
       System.exit(1);
     }
 
+    // AI! Modify the logic slightly so that the --source argument takes either
+    // a directory (as currently implemented), OR, it takes the name of a .zip
+    // file which contains a "proxy bundle".
+    //
+    // In case of the latter, the program should
+    //  - create a temporary directory
+    //  - unzip the zip file in that temporary directory
+    //  - verify that the structure of the unzipped contents looks something like this:
+    //
+    //     apiproxy/
+    //     apiproxy/API-PROXY-NAME-HERE.xml
+    //     apiproxy/policies/
+    //     apiproxy/policies/NAME-OF-POLICY-1.xml
+    //     apiproxy/policies/NAME-OF-POLICY-2.xml
+    //     apiproxy/policies/...
+    //     apiproxy/resources/
+    //     ...
+    //
+    // If unzip fails or if the unzipped archive does not look like that, then
+    // delete the temp directory, print an error message and exit with status 1.
+    //
+    // If the unzipped archive DOES result in a structure like that, then
+    // treat the temporary directory as the "source dir" and proceed with
+    // the logic as currently implemented.
+    //
+    // Extract all of this into a separate instance method.
+    //
+    // In all cases make sure to remove the temporary directory at the
+    // completion of the program.
+
     File source = new File(sourceDir);
     if (!source.exists() || !source.isDirectory()) {
       System.err.printf("Error: source '%s' is not an existing directory.%n", sourceDir);
