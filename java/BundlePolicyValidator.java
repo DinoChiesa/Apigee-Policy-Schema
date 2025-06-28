@@ -144,7 +144,8 @@ public class BundlePolicyValidator {
   private void prepareSource() throws IOException {
     File xsdSource = new File(toolArgs.xsdSourceDir());
     if (!xsdSource.exists() || !xsdSource.isDirectory()) {
-      System.err.printf("Error: xsdSource '%s' is not an existing directory.%n", toolArgs.xsdSourceDir());
+      System.err.printf(
+          "Error: xsdSource '%s' is not an existing directory.%n", toolArgs.xsdSourceDir());
       System.exit(1);
     }
 
@@ -352,6 +353,11 @@ public class BundlePolicyValidator {
         System.err.printf("    [%s] %s%n", notice.type(), notice.exception());
       }
       System.out.printf("-------------------------------------------------------%n");
+      // AI! keep a tally of all the errors from any policy file, and if
+      // the total is non-zero, produce a message at the end here, providing
+      // that number. If there were 3 errors found, it should look like this:
+      //
+      // Validation finished with 3 errors.
     }
 
     if (!fatalErrors.isEmpty()) {
