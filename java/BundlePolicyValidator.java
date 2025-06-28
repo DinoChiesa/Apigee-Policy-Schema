@@ -256,7 +256,6 @@ public class BundlePolicyValidator {
     Map<String, Exception> fatalErrors = new LinkedHashMap<>();
 
     for (File file : filesToValidate) {
-      System.out.printf("Validating %s...%n", file.getPath());
       try {
         ValidationResult result = validateFile(file);
         validationResults.put(file.getPath(), result);
@@ -266,6 +265,9 @@ public class BundlePolicyValidator {
     }
 
     System.out.printf("%n==================== Validation Report ====================%n");
+    // AI! here, print out a header that states the resolved folder for
+    // policy files.   And, below, where filePath is emitted into the output,
+    // make the name relative to this resolved folder.
 
     boolean allValid = true;
 
