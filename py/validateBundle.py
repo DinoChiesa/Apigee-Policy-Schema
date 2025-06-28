@@ -20,7 +20,7 @@ import argparse
 import pathlib
 import sys
 import xml.etree.ElementTree as ET
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import xmlschema
 
@@ -42,7 +42,9 @@ def get_root_element_name(
         return None, f"Could not read or parse file: {e}"
 
 
-def validate_with_schema(xsd_path: str, xml_path: str) -> List[str]:
+def validate_with_schema(
+    xsd_path: str, xml_path: str, schema_cache: Dict[str, xmlschema.XMLSchema11]
+) -> List[str]:
     """
     Validates an XML file against an XSD schema using the 'xmlschema' library.
     This library supports XSD 1.1.
@@ -50,17 +52,18 @@ def validate_with_schema(xsd_path: str, xml_path: str) -> List[str]:
     Args:
     xsd_path (str): The file path to the XSD schema.
     xml_path (str): The file path to the XML document to validate.
+    schema_cache (dict): A cache for storing loaded XSD schemas.
 
     Returns:
     list: A list of validation error messages. An empty list indicates success.
     """
     errors = []
     try:
-        # AI! Keep a dictionary of XSDs by pathname, so it will be unnecessary
-        # to reload a schema if there are multiple policy files that
-        # will be validated against the same XSD. 
-        
-        schema = xmlschema.XMLSchema11(xsd_path)
+        if xsd_path in schema_cache:
+            schema = schema_cache[xsd_path]
+        else:
+            schema = xmlschema.XMLSchema11(xsd_path)
+            schema_cache[xsd_path] = schema
     except xmlschema.XMLSchemaException as e:
         errors.append(
             f"The schema '{pathlib.Path(xsd_path).name}' is not valid. Reason: {e}"
@@ -154,6 +157,8 @@ if __name__ == "__main__":
         print(f"No XML files found in {policies_path}")
         sys.exit(0)
 
+    schema_cache = {}
+
     for xml_file in xml_files:
         file_result = {"file": xml_file.name, "errors": []}
         root_element, err_msg = get_root_element_name(xml_file)
@@ -178,7 +183,9 @@ if __name__ == "__main__":
             results.append(file_result)
             continue
 
-        validation_errors = validate_with_schema(str(xsd_file_path), str(xml_file))
+        validation_errors = validate_with_schema(
+            str(xsd_file_path), str(xml_file), schema_cache
+        )
         if validation_errors:
             file_result["errors"].extend(validation_errors)
 
