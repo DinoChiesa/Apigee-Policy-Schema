@@ -310,6 +310,25 @@ public class BundlePolicyValidator {
   }
 
   public void run() throws Exception {
+
+    // AI! modify the logic to
+    //
+    // 1. Eliminate the policiesPath variable and instead introduce a different instance
+    //    variable, bundlePath, which is the parent of the directory where the policies are found.
+    //
+    // 2. Modify findXmlFiles so that it searches the policies directory (child of
+    //    the bundle path named "policies"), and also:
+    //
+    //    - if there is a child of the bundlePath named "proxies", search in that directory
+    //      as well as in the "targets" directory if it exists, for any XML files, and add those
+    //      to the list.
+    //
+    //    - if there is not a "proxies" directory, look for "sharedflows" and add all XML files
+    //      in that directory to the list.
+    //
+    //    In all cases, the entries in the list returned by findXmlFiles should be names that
+    //    are relative to the bundlePath instance variable.
+
     prepareSource();
     List<File> filesToValidate = findXmlFiles();
     if (filesToValidate.isEmpty()) {
