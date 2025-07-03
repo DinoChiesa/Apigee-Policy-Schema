@@ -101,23 +101,26 @@ def validate_with_schema(
     return errors
 
 
-def get_policy_files_from_bundle(
+def get_validatable_files_from_bundle(
     source_input_path: pathlib.Path,
 ) -> Tuple[List[pathlib.Path], pathlib.Path, Optional[str]]:
     """
-    Finds all policy XML files from a source directory or zip bundle.
+    Finds all validatable XML files from a source directory or zip bundle.
 
     Handles unzipping archives into a temporary directory if necessary.
-    Exits the script with an error if the source is invalid or the policies
+    Exits the script with an error if the source is invalid or a 'policies'
     directory cannot be found.
+
+    This function identifies policy files, and for API Proxy bundles, also
+    proxy and target endpoint files.
 
     Args:
         source_input_path: Path to the source directory or .zip file.
 
     Returns:
         A tuple containing:
-        - A sorted list of paths to the policy XML files.
-        - The path to the policies directory.
+        - A sorted list of paths to validatable XML files, relative to the bundle path.
+        - The path to the bundle directory.
         - The name of the temporary directory if one was created, otherwise None.
     """
     temp_dir_name = None
@@ -162,10 +165,12 @@ def get_policy_files_from_bundle(
         "sharedflowbundle/policies",
     ]
     policies_path = None
+    bundle_path = None
     for p_dir in policies_dir_options:
         current_path = source_path.joinpath(p_dir)
         if current_path.is_dir():
             policies_path = current_path
+            bundle_path = policies_path.parent
             break
 
     if not policies_path:
@@ -185,13 +190,33 @@ def get_policy_files_from_bundle(
             )
         sys.exit(1)
 
-    xml_files = sorted(list(policies_path.glob("*.xml")))
-    return xml_files, policies_path, temp_dir_name
+    xml_files = []
+
+    # 1. Policy files
+    policy_xml_files = sorted(list(policies_path.glob("*.xml")))
+    for p in policy_xml_files:
+        xml_files.append(p.relative_to(bundle_path))
+
+    # 2. if apiproxy, also check proxies and targets.
+    # We identify an apiproxy bundle by the presence of a 'proxies' directory.
+    proxies_path = bundle_path.joinpath("proxies")
+    if proxies_path.is_dir():
+        proxy_xml_files = sorted(list(proxies_path.glob("*.xml")))
+        for p in proxy_xml_files:
+            xml_files.append(p.relative_to(bundle_path))
+
+        targets_path = bundle_path.joinpath("targets")
+        if targets_path.is_dir():
+            target_xml_files = sorted(list(targets_path.glob("*.xml")))
+            for p in target_xml_files:
+                xml_files.append(p.relative_to(bundle_path))
+
+    return sorted(xml_files), bundle_path, temp_dir_name
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Validate all policy XML files in a bundle."
+        description="Validate all XML configuration files in a bundle."
     )
     parser.add_argument(
         "--xsdSource",
@@ -220,20 +245,23 @@ if __name__ == "__main__":
 
         source_input_path = pathlib.Path(args.source)
 
-        xml_files, policies_path, temp_dir_name = get_policy_files_from_bundle(
-            source_input_path
-        )
+        (
+            xml_files_relative,
+            bundle_path,
+            temp_dir_name,
+        ) = get_validatable_files_from_bundle(source_input_path)
 
-        if not xml_files:
-            print(f"No XML files found in {policies_path}")
+        if not xml_files_relative:
+            print(f"No XML files found in {bundle_path}")
             sys.exit(0)
 
         results = []
         schema_cache = {}
 
-        for xml_file in xml_files:
-            file_result = {"file": xml_file.name, "errors": []}
-            root_element, err_msg = get_root_element_name(xml_file)
+        for xml_file_rel in xml_files_relative:
+            xml_file_abs = bundle_path.joinpath(xml_file_rel)
+            file_result = {"file": str(xml_file_rel), "errors": []}
+            root_element, err_msg = get_root_element_name(xml_file_abs)
 
             if err_msg:
                 file_result["errors"].append(err_msg)
@@ -256,7 +284,7 @@ if __name__ == "__main__":
                 continue
 
             validation_errors = validate_with_schema(
-                str(xsd_file_path), str(xml_file), schema_cache
+                str(xsd_file_path), str(xml_file_abs), schema_cache
             )
             if validation_errors:
                 file_result["errors"].extend(validation_errors)
@@ -264,7 +292,7 @@ if __name__ == "__main__":
             results.append(file_result)
 
         print("==================== Validation Report ====================")
-        print(f"Policies directory: {policies_path}")
+        print(f"Bundle directory: {bundle_path}")
         print()
 
         total_errors = 0
@@ -283,7 +311,7 @@ if __name__ == "__main__":
             print(f"\nValidation finished with {total_errors} errors.")
             sys.exit(1)
         else:
-            print("\nAll policies validated successfully.")
+            print("\nAll files validated successfully.")
             sys.exit(0)
 
     finally:

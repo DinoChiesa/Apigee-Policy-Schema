@@ -21,6 +21,8 @@ import pathlib
 import sys
 from pprint import pprint
 
+import lxml
+import lxml.etree as ET
 import xmlschema
 
 
@@ -63,9 +65,10 @@ def validate_xml(xsd_path: str, xml_path: str) -> bool:
 
     # 2. Validate the XML against the schema
     try:
+        xml_doc = ET.parse(xml_path)
         # iter_errors() returns an iterator for all validation errors.
         # We convert it to a list to check if there are any errors.
-        validation_errors = list(schema.iter_errors(xml_path))
+        validation_errors = list(schema.iter_errors(xml_doc))
 
         if not validation_errors:
             print(f"✅ XML document '{xml_path}' parsed successfully.")
@@ -79,7 +82,24 @@ def validate_xml(xsd_path: str, xml_path: str) -> bool:
                 # It does not have 'line' or 'column' attributes directly.
                 # However, if lxml is installed, error.elem will be an lxml
                 # element, which has a 'sourceline' attribute.
-                print(f"Path: {error.path}: {error.reason}")
+                pprint(vars(error))
+                print(f"error: {error.sourceline}")
+                print(f"obj: {error.obj}")
+                print(f"source: {error.source}")
+                pprint(vars(error.source))
+                # if hasattr(error.source, "sourceline"):
+                #    print(f"source.sourceline: {error.source.sourceline}")
+                if hasattr(error, "elem"):
+                    if hasattr(error.elem, "sourceline"):
+                        print(
+                            f"M: {error.message} Path: {error.path}: {error.reason} sourceline:{error.elem.sourceline}"
+                        )
+                    else:
+                        print(
+                            f"M: {error.message} Path: {error.path}: {error.reason} {error.elem}"
+                        )
+                else:
+                    print(f"Path: {error.path}: {error.reason}")
             return False
 
     except FileNotFoundError:

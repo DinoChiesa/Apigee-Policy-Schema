@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           xmlns:xerces="http://xerces.apache.org"
+           xmlns:saxon="http://saxon.sf.net/"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:complexType name='endpointBase'>
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="epDescription"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="FaultRules" type="epFaultRules"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="DefaultFaultRule" type="epDefaultFaultRule"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="PreFlow" type="epPreOrPostFlow"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="PostFlow" type="epPreOrPostFlow"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="EventFlow" type="epEventFlow"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Flows" type="epFlows"/>
+    </xs:all>
+    <xs:attribute name="name" use="required" type="xs:NCName"/>
+    <xs:assert test="count(Description) le 1 and
+                     count(FaultRules) le 1 and
+                     count(DefaultFaultRule) le 1 and
+                     count(PreFlow) le 1 and
+                     count(PostFlow) le 1 and
+                     count(EventFlow) le 1 and
+                     count(Flows) le 1"/>
+  </xs:complexType>
+
+  <xs:complexType name="epDefaultFaultRule">
+    <xs:all>
+      <xs:element name="Step" type="epStep"/>
+      <xs:element name="AlwaysEnforce" type="xs:boolean"/>
+    </xs:all>
+    <xs:attribute name="name" type="xs:NCName"/>
+    <xs:assert test="count(AlwaysEnforce) le 1 and count(Step) ge 1"/>
+  </xs:complexType>
+
+  <xs:complexType name="epProperties">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='Property' type="epProperty"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="epProperty">
+    <xs:simpleContent>
+      <xs:extension base="xs:boolean">
+        <xs:attribute name="name" use="required" type="xs:NCName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="epPreOrPostFlow">
+    <xs:all>
+      <xs:element name="Request" type="epRequestOrResponse"/>
+      <xs:element name="Response" type="epRequestOrResponse"/>
+    </xs:all>
+    <xs:attribute name="name" type="xs:NCName"/>
+    <xs:assert test="count(Response) le 1 and count(Request) le 1"/>
+  </xs:complexType>
+
+  <xs:complexType name="epEventFlow">
+    <xs:all>
+      <xs:element name="Response" type="epRequestOrResponse"/>
+    </xs:all>
+    <xs:attribute name="name" use='required' type="xs:NCName"/>
+    <xs:attribute name="content-type" use='required' type="epNonEmptyString"/>
+    <xs:assert test="count(Response) eq 1"/>
+  </xs:complexType>
+
+  <xs:complexType name="epStep">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name='Condition' type="epCondition"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="Name" type="xs:NMTOKEN"/>
+    </xs:all>
+    <xs:assert test="count(Name) eq 1 and count(Condition) le 1"/>
+  </xs:complexType>
+
+  <xs:simpleType name="epDescription">
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="epCondition">
+    <xs:restriction base="epNonEmptyString"/>
+  </xs:simpleType>
+
+  <xs:complexType name="epRequestOrResponse">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='Step' type="epStep"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="epFaultRules">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="FaultRule" type="epFaultRule"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="epFaultRule">
+    <xs:all>
+      <xs:element minOccurs='0' name='Condition' type="epCondition"/>
+      <xs:element minOccurs='1' maxOccurs='unbounded' name='Step' type="epStep"/>
+    </xs:all>
+    <xs:attribute name="name" type='xs:NCName' use='required'/>
+    <xs:assert test="count(Condition) le 1 and count(Step) ge 1"/>
+  </xs:complexType>
+
+  <xs:complexType name="epFlows">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='Flow' type="epFlow"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="epFlow">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name='Condition' type="epCondition"/>
+      <xs:element minOccurs='0' maxOccurs='1' name='Description' type="epDescription"/>
+      <xs:element minOccurs='0' maxOccurs='1' name='Request' type="epRequestOrResponse"/>
+      <xs:element minOccurs='0' maxOccurs='1' name='Response' type="epRequestOrResponse"/>
+    </xs:all>
+    <xs:attribute name="name" use="required" type="epNonEmptyString"/>
+  </xs:complexType>
+
+  <xs:simpleType name="epNonEmptyString">
+    <xs:restriction base="xs:string">
+      <xs:assertion test="string-length($value) ge 1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

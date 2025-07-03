@@ -40,7 +40,7 @@ For example, to validate a sample `AssignMessage` policy:
 python ./validatePolicy.py --xsd schema/AssignMessage.xsd --xml /path/to/your/assign-message-policy.xml
 ```
 
-To validate all of the policies within a bundle:
+To validate all of the policies as well as the endoints configured within a bundle:
 
 ```bash
 python validateBundle.py --xsdSource ../schema --source /path/to/your/apiproxy

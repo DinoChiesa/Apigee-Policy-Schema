@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="endpointBase.xsd"/>
+
+  <xs:element name="ProxyEndpoint">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="endpointBase">
+          <xs:all>
+            <xs:element minOccurs="1" maxOccurs="1" name="HTTPProxyConnection" type="epHTTPProxyConnection"/>
+            <xs:element minOccurs="0" maxOccurs="1" name="PostClientFlow" type="epPostClientFlow"/>
+            <xs:element minOccurs="1" maxOccurs="unbounded" name="RouteRule" type="epRouteRule"/>
+          </xs:all>
+          <xs:assert  test="count(HTTPProxyConnection) eq 1 and
+                            count(RouteRule) ge 1 and
+                            count(PostClientFlow) le 1"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="epPostClientFlow">
+    <xs:sequence>
+      <xs:element maxOccurs='1' name='Response' type="epRequestOrResponse"/>
+    </xs:sequence>
+    <xs:attribute name="name" use="required" type="xs:NCName"/>
+  </xs:complexType>
+
+  <xs:complexType name="epHTTPProxyConnection">
+    <xs:all>
+      <xs:element minOccurs="1" maxOccurs="1" name="BasePath" type="xs:string"/>
+      <xs:element minOccurs="0" maxOccurs="1" name='Properties' type="epProperties"/>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name='VirtualHost' type="xs:NCName"/>
+    </xs:all>
+    <xs:assert test="count(BasePath) eq 1"/>
+    <xs:assert test="count(Properties) le 1"/>
+  </xs:complexType>
+
+  <xs:complexType name="epRouteRule">
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name="Condition" type="epCondition"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="TargetEndpoint" type="xs:NCName"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="IntegrationEndpoint" type="xs:NCName"/>
+    </xs:all>
+    <xs:attribute name="name" use="required" type="xs:NCName"/>
+    <xs:assert test="(count(TargetEndpoint) eq 1 and count(IntegrationEndpoint) eq 0) or
+                     (count(TargetEndpoint) eq 0 and count(IntegrationEndpoint) eq 1) or
+                     (count(TargetEndpoint) eq 0 and count(IntegrationEndpoint) eq 0)"/>
+  </xs:complexType>
+
+</xs:schema>

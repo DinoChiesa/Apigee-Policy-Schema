@@ -1,7 +1,7 @@
 # Policy Schema for Apigee X/hybrid policies
 
 A set of XML Schemas (XSD 1.1) that describe the required and optional parts of
-the XML "Domain specific language" for Apigee X/hybrid policies.
+the XML "Domain specific language" for Apigee X/hybrid policies and endpoints.
 
 ## Background
 
@@ -75,7 +75,5 @@ for responses to inquiries posted to that site.
 
 ## Bugs
 
-* There are no schemas here for:
-  - ProxyEndpoint
-  - TargetEndpoint
+* There is no schema yet for:
   - SharedflowBundle

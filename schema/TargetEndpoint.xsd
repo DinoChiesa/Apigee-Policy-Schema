@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="endpointBase.xsd"/>
+
+  <xs:element name="TargetEndpoint">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="endpointBase">
+          <xs:all>
+            <xs:element name="HTTPTargetConnection" type="epHTTPTargetConnection"/>
+            <xs:element name="LocalTargetConnection" type="epLocalTargetConnection"/>
+          </xs:all>
+          <xs:assert test="(count(HTTPTargetConnection) eq 1 and count(LocalTargetConnection) eq 0) or
+                           (count(HTTPTargetConnection) eq 0 and count(LocalTargetConnection) eq 1)"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="epHTTPTargetConnection">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name="Authentication" type="epAuthentication"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Properties" type="epProperties"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="LoadBalancer" type="epLoadBalancer"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="HealthMonitor" type="epHealthMonitor"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="SSLInfo" type="epSSLInfo"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="URL" type="xs:anyURI"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="Path" type="xs:string"/>
+    </xs:all>
+    <xs:assert test="(count(URL) eq 1 and count(LoadBalancer) eq 0) or
+                     (count(URL) eq 0 and count(LoadBalancer) eq 1)"/>
+  </xs:complexType>
+
+  <xs:complexType name="epLocalTargetConnection">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name="APIProxy" type="epNonEmptyString"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="ProxyEndpoint" type="epNonEmptyString"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Path" type="epNonEmptyString"/>
+    </xs:all>
+    <xs:assert test="(count(APIProxy) eq 1 and count(ProxyEndpoint) eq 1 and count(Path) eq 0) or
+                     (count(APIProxy) eq 0 and count(ProxyEndpoint) eq 0 and count(Path) eq 1)"/>
+  </xs:complexType>
+
+  <xs:complexType name="epAuthentication">
+    <xs:all>
+      <xs:element minOccurs="0" name="GoogleAccessToken" type="epGoogleAccessToken"/>
+      <xs:element minOccurs="0" name="HeaderName" type="xs:NCName"/>
+      <xs:element minOccurs="0" name="GoogleIDToken" type="epGoogleIDToken"/>
+    </xs:all>
+    <xs:assert test="(count(GoogleAccessToken) eq 1 and count(GoogleAccessToken) eq 0) or
+                     (count(GoogleAccessToken) eq 0 and count(GoogleAccessToken) eq 1)"/>
+  </xs:complexType>
+
+  <xs:complexType name="epGoogleAccessToken">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="Scopes" type='epScopes'/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="epScopes">
+    <xs:sequence>
+      <xs:element minOccurs="1" maxOccurs="unbounded" name="Scope" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="epGoogleIDToken">
+    <xs:sequence>
+      <xs:element minOccurs="1" maxOccurs="1" name="Audience" type="xs:anyURI"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="epLoadBalancer">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name="Algorithm" type="epAlgorithm"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="MaxFailures" type="xs:integer"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="RetryEnabled" type='xs:boolean'/>
+      <xs:element minOccurs="0" maxOccurs="1" name="TargetDisableSecs" type="xs:integer"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="ServerUnhealthyResponse" type="epUnhealthyResponse"/>
+      <xs:element minOccurs="1" maxOccurs="unbounded" name="Server" type="epServer"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:simpleType name="epAlgorithm">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="RoundRobin"/>
+      <xs:enumeration value="Weighted"/>
+      <xs:enumeration value="LeastConnections"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="epServer">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name="IsEnabled" type="xs:boolean"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="IsFallback" type="xs:boolean"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Weight" type="xs:integer"/>
+    </xs:all>
+    <xs:attribute name="name" use="required" type="xs:NCName"/>
+  </xs:complexType>
+
+  <xs:complexType name="epSSLInfo">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name="Enabled" type="xs:boolean"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="ClientAuthEnabled" type="xs:boolean"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="KeyStore" type="epNonEmptyString"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="KeyAlias" type="epNonEmptyString"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="CertAlias" type="epNonEmptyString"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="CommonName" type="epCommonName"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Protocols" type="epProtocols"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Ciphers" type="epCiphers"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="TrustStore" type="epNonEmptyString"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Enforce" type="xs:boolean"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="IgnoreValidationErrors" type="xs:boolean"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="epCommonName">
+    <xs:simpleContent>
+      <xs:extension base="nonEmptyString">
+        <xs:attribute name="wildcardMatch" type="xs:boolean"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="epProtocols">
+    <xs:sequence>
+      <xs:element name='Protocol' minOccurs="0" maxOccurs="unbounded" type="epNonEmptyString"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="epCiphers">
+    <xs:sequence>
+      <xs:element name='Cipher' minOccurs="0" maxOccurs="unbounded" type="epNonEmptyString"/>
+    </xs:sequence>
+  </xs:complexType>
+
+
+</xs:schema>
