@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+  <xs:include schemaLocation="endpointBase.xsd"/>
+
+  <xs:element name="SharedFlow">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="epRequestOrResponse">
+          <xs:attribute name="name" use="required" type="epNonEmptyString"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

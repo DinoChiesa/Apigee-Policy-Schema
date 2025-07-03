@@ -1,7 +1,8 @@
 # Policy Schema for Apigee X/hybrid policies
 
 A set of XML Schemas (XSD 1.1) that describe the required and optional parts of
-the XML "Domain specific language" for Apigee X/hybrid policies and endpoints.
+the XML "Domain specific language" for Apigee X/hybrid policies, endpoints,
+and sharedflows.
 
 ## Background
 
@@ -63,7 +64,6 @@ This repository includes some examples for validating policy files, or bundles.
 This material is [Copyright © 2025 Google LLC](./NOTICE).
 and is licensed under the [Apache 2.0 License](LICENSE).
 
-
 ## Support
 
 These schemas are published as open-source software; they are not a supported
@@ -75,5 +75,4 @@ for responses to inquiries posted to that site.
 
 ## Bugs
 
-* There is no schema yet for:
-  - SharedflowBundle
+* ??

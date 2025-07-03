@@ -1,7 +1,7 @@
 ## Example Validator in Java
 
 This is a Java validator that uses Apache XercesJ 2.12.2 with XSD 1.1 support
-to validate policy files against the Apigee schema.
+to validate policy, proxy, target, and sharedflow files against the Apigee schema.
 
 ### Pre-requisites
 
@@ -39,8 +39,8 @@ to validate policy files against the Apigee schema.
         --xml ~/dev/my-bundle/apiproxy/policies/SC-Get-Identity-Token-from-IAM.xml
    ```
 
-   Check all of the policy files in an "exploded bundle" against any of the
-   possible Schemas available for Apigee:
+   Check all of the policy files, proxies, targets, and sharedflows in an "exploded bundle"
+   against any of the possible Schemas available for Apigee:
 
    ```sh
    java -classpath ./out:./vendor/*  BundlePolicyValidator \
@@ -48,7 +48,7 @@ to validate policy files against the Apigee schema.
         --source ~/dev/my-bundle/apiproxy
    ```
 
-   Check all of the policy files in a bundle zip:
+   Check all of the validatable files in a bundle zip:
 
    ```sh
    java -classpath ./out:./vendor/*  BundlePolicyValidator \

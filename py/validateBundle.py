@@ -199,6 +199,7 @@ def get_validatable_files_from_bundle(
 
     # 2. if apiproxy, also check proxies and targets.
     # We identify an apiproxy bundle by the presence of a 'proxies' directory.
+
     proxies_path = bundle_path.joinpath("proxies")
     if proxies_path.is_dir():
         proxy_xml_files = sorted(list(proxies_path.glob("*.xml")))
@@ -210,6 +211,11 @@ def get_validatable_files_from_bundle(
             target_xml_files = sorted(list(targets_path.glob("*.xml")))
             for p in target_xml_files:
                 xml_files.append(p.relative_to(bundle_path))
+    else:
+        sharedflows_path = bundle_path.joinpath("sharedflows")
+        _xml_files = sorted(list(sharedflows_path.glob("*.xml")))
+        for p in _xml_files:
+            xml_files.append(p.relative_to(bundle_path))
 
     return sorted(xml_files), bundle_path, temp_dir_name
 

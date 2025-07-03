@@ -1,7 +1,7 @@
 ## Example Validator in Python
 
 This is a validator that uses Python 3.13 and the xmlschema module
-to validate policy files against the Apigee schema.
+to validate policy, endpoint, and sharedflow files against the Apigee schema.
 
 ### Pre-requisites
 
@@ -10,7 +10,7 @@ to validate policy files against the Apigee schema.
 
 ### Setup
 
-To use the script, you'll need to install its dependencies. It's recommended to
+To use the script, you'll need to install its dependencies. It's a good idea to
 use a Python virtual environment.
 
 1.  **Create and activate a virtual environment:**
@@ -46,8 +46,8 @@ To validate all of the policies as well as the endoints configured within a bund
 python validateBundle.py --xsdSource ../schema --source /path/to/your/apiproxy
 ```
 
-You can also specify a zipped proxy bundle:
+You can also specify a zipped bundle (apiproxy or sharedflo):
 
 ```bash
-python validateBundle.py --xsdSource ../schema --source /path/to/your/apiproxy-bundle.zip
+python validateBundle.py --xsdSource ../schema --source /path/to/your/apiproxy-or-sharedflow-bundle.zip
 ```

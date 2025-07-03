@@ -45,7 +45,7 @@ public class BundlePolicyValidator {
   private final ToolArgs toolArgs;
   private SchemaFactory schemaFactory;
   private final Map<String, Schema> schemaCache = new LinkedHashMap<>();
-  private Path policiesPath;
+  private Path bundlePath;
   private Path effectiveSourcePath;
   private Path tempDirToDelete = null;
 
@@ -191,16 +191,19 @@ public class BundlePolicyValidator {
       System.exit(1);
     }
 
-    String[] policiesDirs = {"policies", "apiproxy/policies", "sharedflowbundle/policies"};
+    String[] policiesDirs = {"apiproxy/policies", "sharedflowbundle/policies", "policies"};
     for (String dir : policiesDirs) {
-      Path currentPath = this.effectiveSourcePath.resolve(dir);
-      if (Files.exists(currentPath) && Files.isDirectory(currentPath)) {
-        this.policiesPath = currentPath;
+      Path currentPoliciesPath = this.effectiveSourcePath.resolve(dir);
+      if (Files.exists(currentPoliciesPath) && Files.isDirectory(currentPoliciesPath)) {
+        // The bundle path is the parent of the policies directory.
+        // For a path like "apiproxy/policies", the parent is "apiproxy".
+        // For a path like "policies", the parent is the root of the bundle structure.
+        this.bundlePath = currentPoliciesPath.getParent();
         break;
       }
     }
 
-    if (this.policiesPath == null) {
+    if (this.bundlePath == null) {
       if (this.tempDirToDelete != null) {
         System.err.printf(
             "Error: The zip file '%s' does not appear to be a valid bundle.%n", sourceInputPath);
@@ -208,7 +211,7 @@ public class BundlePolicyValidator {
             "Could not find a 'policies' directory in standard locations within the archive.");
       } else {
         System.err.println("Error: Could not find a 'policies' directory in the source.");
-        System.err.println("Searched for: policies, apiproxy/policies, sharedflowbundle/policies");
+        System.err.println("Searched for: apiproxy/policies, sharedflowbundle/policies, policies");
       }
       System.exit(1);
     }
@@ -236,18 +239,38 @@ public class BundlePolicyValidator {
     }
   }
 
-  private List<File> findXmlFiles() throws IOException {
-    if (this.policiesPath == null) {
-      throw new IllegalStateException("policiesPath is not set. Call prepareSource() first.");
+  private void addXmlFilesFromDir(Path dir, List<File> files) throws IOException {
+    if (Files.exists(dir) && Files.isDirectory(dir)) {
+      try (Stream<Path> paths = Files.walk(dir)) {
+        paths
+            .filter(Files::isRegularFile)
+            .filter(path -> path.toString().toLowerCase().endsWith(".xml"))
+            .map(Path::toFile)
+            .forEach(files::add);
+      }
     }
+  }
 
-    try (Stream<Path> paths = Files.list(this.policiesPath)) {
-      return paths
-          .filter(Files::isRegularFile)
-          .filter(path -> path.toString().toLowerCase().endsWith(".xml"))
-          .map(Path::toFile)
-          .toList();
+  private List<File> findXmlFiles() throws IOException {
+    if (this.bundlePath == null) {
+      throw new IllegalStateException("bundlePath is not set. Call prepareSource() first.");
     }
+    List<File> xmlFiles = new ArrayList<>();
+
+    // Every bundle has a policies directory.
+    addXmlFilesFromDir(this.bundlePath.resolve("policies"), xmlFiles);
+
+    // API Proxies have proxies and optionally targets. Shared Flows have sharedflows.
+    // A bundle can be one or the other, but not both.
+    Path proxiesDir = this.bundlePath.resolve("proxies");
+    if (Files.exists(proxiesDir) && Files.isDirectory(proxiesDir)) {
+      addXmlFilesFromDir(proxiesDir, xmlFiles);
+      addXmlFilesFromDir(this.bundlePath.resolve("targets"), xmlFiles);
+    } else {
+      // It's not an API proxy, maybe it is a Shared Flow.
+      addXmlFilesFromDir(this.bundlePath.resolve("sharedflows"), xmlFiles);
+    }
+    return xmlFiles.stream().distinct().toList();
   }
 
   private String getRootElementName(File xmlFile) throws IOException, XMLStreamException {
@@ -310,29 +333,10 @@ public class BundlePolicyValidator {
   }
 
   public void run() throws Exception {
-
-    // AI! modify the logic to
-    //
-    // 1. Eliminate the policiesPath variable and instead introduce a different instance
-    //    variable, bundlePath, which is the parent of the directory where the policies are found.
-    //
-    // 2. Modify findXmlFiles so that it searches the policies directory (child of
-    //    the bundle path named "policies"), and also:
-    //
-    //    - if there is a child of the bundlePath named "proxies", search in that directory
-    //      as well as in the "targets" directory if it exists, for any XML files, and add those
-    //      to the list.
-    //
-    //    - if there is not a "proxies" directory, look for "sharedflows" and add all XML files
-    //      in that directory to the list.
-    //
-    //    In all cases, the entries in the list returned by findXmlFiles should be names that
-    //    are relative to the bundlePath instance variable.
-
     prepareSource();
     List<File> filesToValidate = findXmlFiles();
     if (filesToValidate.isEmpty()) {
-      System.out.printf("No XML files found in %s%n", this.policiesPath);
+      System.out.printf("No XML files found to validate in %s%n", this.bundlePath);
       System.exit(0);
     }
 
@@ -351,7 +355,7 @@ public class BundlePolicyValidator {
     }
 
     System.out.printf("%n==================== Validation Report ====================%n");
-    System.out.printf("Policies directory: %s%n%n", this.policiesPath);
+    System.out.printf("Bundle directory: %s%n%n", this.bundlePath);
 
     boolean allValid = true;
     long totalErrorCount = 0;
@@ -359,7 +363,7 @@ public class BundlePolicyValidator {
     for (Map.Entry<String, ValidationResult> entry : validationResults.entrySet()) {
       String absoluteFilePath = entry.getKey();
       ValidationResult result = entry.getValue();
-      Path relativePath = this.policiesPath.relativize(Paths.get(absoluteFilePath));
+      Path relativePath = this.bundlePath.relativize(Paths.get(absoluteFilePath));
 
       System.out.printf("File: %s%n", relativePath);
       if (result.hasErrors()) {
@@ -386,7 +390,7 @@ public class BundlePolicyValidator {
       for (Map.Entry<String, Exception> entry : fatalErrors.entrySet()) {
         String absoluteFilePath = entry.getKey();
         Exception e = entry.getValue();
-        Path relativePath = this.policiesPath.relativize(Paths.get(absoluteFilePath));
+        Path relativePath = this.bundlePath.relativize(Paths.get(absoluteFilePath));
 
         System.out.printf("File: %s%n", relativePath);
         System.err.printf("  [fatal] %s%n", e.getMessage());
