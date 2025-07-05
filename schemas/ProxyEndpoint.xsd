@@ -23,10 +23,11 @@
   </xs:element>
 
   <xs:complexType name="epPostClientFlow">
-    <xs:sequence>
-      <xs:element maxOccurs='1' name='Response' type="epRequestOrResponse"/>
-    </xs:sequence>
-    <xs:attribute name="name" use="required" type="xs:NCName"/>
+    <xs:all>
+      <xs:element minOccurs='0' maxOccurs='1' name='Description' type="xs:string"/>
+      <xs:element minOccurs='1' maxOccurs='1' name='Response' type="epRequestOrResponse"/>
+    </xs:all>
+    <xs:attribute name="name" use="optional" type="xs:string"/>
   </xs:complexType>
 
   <xs:complexType name="epHTTPProxyConnection">

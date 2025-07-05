@@ -99,6 +99,7 @@
     </xs:restriction>
   </xs:simpleType>
 
+<!--
   <xs:complexType name="Parameters">
     <xs:sequence>
       <xs:element minOccurs='0' maxOccurs="unbounded" name="Parameter" type="Parameter"/>
@@ -107,8 +108,9 @@
 
   <xs:complexType name="Parameter">
     <xs:attribute name="name" use="required" type="xs:NCName"/>
-    <xs:attribute name="ref" use="required" type="xs:NCName"/>
+    <xs:attribute name="ref" use="optional" type="xs:NCName"/>
   </xs:complexType>
+-->
 
   <xs:complexType name="refOnly">
     <xs:simpleContent>

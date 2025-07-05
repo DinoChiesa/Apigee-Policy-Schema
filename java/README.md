@@ -35,7 +35,7 @@ to validate policy, proxy, target, and sharedflow files against the Apigee schem
 
    ```sh
    java -classpath ./out:./vendor/*   SchemaValidatorTool \
-        --xsd ../schema/ServiceCallout.xsd \
+        --xsd ../schemas/ServiceCallout.xsd \
         --xml ~/dev/my-bundle/apiproxy/policies/SC-Get-Identity-Token-from-IAM.xml
    ```
 
@@ -44,7 +44,7 @@ to validate policy, proxy, target, and sharedflow files against the Apigee schem
 
    ```sh
    java -classpath ./out:./vendor/*  BundlePolicyValidator \
-        --xsdSource ../schema \
+        --xsdSource ../schemas \
         --source ~/dev/my-bundle/apiproxy
    ```
 
@@ -52,6 +52,6 @@ to validate policy, proxy, target, and sharedflow files against the Apigee schem
 
    ```sh
    java -classpath ./out:./vendor/*  BundlePolicyValidator \
-        --xsdSource ../schema \
+        --xsdSource ../schemas \
         --source ~/dev/my-bundle/apiproxy-bundle.zip
    ```

@@ -31,23 +31,23 @@ use a Python virtual environment.
 Once the dependencies are installed, you can run the script like this:
 
 ```bash
-python ./validatePolicy.py --xsd schema/TheSchema.xsd --xml /path/to/your/policy.xml
+python ./validatePolicy.py --xsd ../schemas/TheSchema.xsd --xml /path/to/your/policy.xml
 ```
 
 For example, to validate a sample `AssignMessage` policy:
 
 ```bash
-python ./validatePolicy.py --xsd schema/AssignMessage.xsd --xml /path/to/your/assign-message-policy.xml
+python ./validatePolicy.py --xsd ../schema/AssignMessage.xsd --xml /path/to/your/assign-message-policy.xml
 ```
 
 To validate all of the policies as well as the endoints configured within a bundle:
 
 ```bash
-python validateBundle.py --xsdSource ../schema --source /path/to/your/apiproxy
+python validateBundle.py --xsdSource ../schemas --source /path/to/your/apiproxy
 ```
 
 You can also specify a zipped bundle (apiproxy or sharedflo):
 
 ```bash
-python validateBundle.py --xsdSource ../schema --source /path/to/your/apiproxy-or-sharedflow-bundle.zip
+python validateBundle.py --xsdSource ../schemas --source /path/to/your/apiproxy-or-sharedflow-bundle.zip
 ```

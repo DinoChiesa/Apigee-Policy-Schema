@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:include schemaLocation="policyCommon.xsd"/>
+
+  <xs:element name="FlowCallout">
+    <xs:complexType>
+      <xs:complexContent mixed="false">
+        <xs:extension base="policyBase">
+          <xs:all>
+            <xs:element minOccurs='0' maxOccurs='unbounded' name="Parameters" type="fcParameters"/>
+            <xs:element minOccurs='1' maxOccurs='1' name="SharedFlowBundle" type="xs:NCName"/>
+          </xs:all>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="fcParameters">
+    <xs:sequence>
+      <xs:element minOccurs='0' maxOccurs="unbounded" name="Parameter" type="fcParameter"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fcParameter">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" use="required" type="xs:NCName"/>
+        <xs:attribute name="ref" use="optional" type="xs:NCName"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+</xs:schema>

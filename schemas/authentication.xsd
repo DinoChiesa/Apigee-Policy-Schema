@@ -20,6 +20,12 @@
 
   </xs:complexType>
 
+  <xs:simpleType name="authNonEmptyString">
+    <xs:restriction base="xs:string">
+      <xs:assertion test="string-length($value) ge 1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:complexType name="authGoogleAccessToken">
     <xs:all>
       <xs:element minOccurs='1' name="Scopes" type="authScopes"/>
@@ -43,7 +49,7 @@
   <xs:complexType name="authHeaderName">
     <xs:simpleContent>
       <xs:extension base="xs:string">
-        <xs:attribute name="ref" type="nonEmptyString"/>
+        <xs:attribute name="ref" type="authNonEmptyString"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -51,7 +57,7 @@
   <xs:complexType name="idTokenAudience">
     <xs:simpleContent>
       <xs:extension base="xs:string">
-        <xs:attribute name="ref" type="nonEmptyString"/>
+        <xs:attribute name="ref" type="authNonEmptyString"/>
         <xs:attribute name="useTargetUrl" type="xs:boolean"/>
       </xs:extension>
     </xs:simpleContent>

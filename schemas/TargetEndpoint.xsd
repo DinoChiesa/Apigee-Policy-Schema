@@ -4,14 +4,15 @@
            vc:minVersion="1.1"
            elementFormDefault="qualified">
   <xs:include schemaLocation="endpointBase.xsd"/>
+  <xs:include schemaLocation="authentication.xsd"/>
 
   <xs:element name="TargetEndpoint">
     <xs:complexType>
       <xs:complexContent mixed="false">
         <xs:extension base="endpointBase">
           <xs:all>
-            <xs:element name="HTTPTargetConnection" type="epHTTPTargetConnection"/>
-            <xs:element name="LocalTargetConnection" type="epLocalTargetConnection"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="HTTPTargetConnection" type="epHTTPTargetConnection"/>
+            <xs:element minOccurs='0' maxOccurs='1' name="LocalTargetConnection" type="epLocalTargetConnection"/>
           </xs:all>
           <xs:assert test="(count(HTTPTargetConnection) eq 1 and count(LocalTargetConnection) eq 0) or
                            (count(HTTPTargetConnection) eq 0 and count(LocalTargetConnection) eq 1)"/>
@@ -22,13 +23,13 @@
 
   <xs:complexType name="epHTTPTargetConnection">
     <xs:all>
-      <xs:element minOccurs="0" maxOccurs="1" name="Authentication" type="epAuthentication"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Authentication" type="authentication"/>
       <xs:element minOccurs="0" maxOccurs="1" name="Properties" type="epProperties"/>
       <xs:element minOccurs="0" maxOccurs="1" name="LoadBalancer" type="epLoadBalancer"/>
       <xs:element minOccurs="0" maxOccurs="1" name="HealthMonitor" type="epHealthMonitor"/>
       <xs:element minOccurs="0" maxOccurs="1" name="SSLInfo" type="epSSLInfo"/>
-      <xs:element minOccurs="1" maxOccurs="1" name="URL" type="xs:anyURI"/>
-      <xs:element minOccurs="1" maxOccurs="1" name="Path" type="xs:string"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="URL" type="xs:anyURI"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Path" type="xs:string"/>
     </xs:all>
     <xs:assert test="(count(URL) eq 1 and count(LoadBalancer) eq 0) or
                      (count(URL) eq 0 and count(LoadBalancer) eq 1)"/>
@@ -44,41 +45,13 @@
                      (count(APIProxy) eq 0 and count(ProxyEndpoint) eq 0 and count(Path) eq 1)"/>
   </xs:complexType>
 
-  <xs:complexType name="epAuthentication">
-    <xs:all>
-      <xs:element minOccurs="0" name="GoogleAccessToken" type="epGoogleAccessToken"/>
-      <xs:element minOccurs="0" name="HeaderName" type="xs:NCName"/>
-      <xs:element minOccurs="0" name="GoogleIDToken" type="epGoogleIDToken"/>
-    </xs:all>
-    <xs:assert test="(count(GoogleAccessToken) eq 1 and count(GoogleAccessToken) eq 0) or
-                     (count(GoogleAccessToken) eq 0 and count(GoogleAccessToken) eq 1)"/>
-  </xs:complexType>
-
-  <xs:complexType name="epGoogleAccessToken">
-    <xs:sequence>
-      <xs:element minOccurs="0" maxOccurs="1" name="Scopes" type='epScopes'/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="epScopes">
-    <xs:sequence>
-      <xs:element minOccurs="1" maxOccurs="unbounded" name="Scope" type="xs:string"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="epGoogleIDToken">
-    <xs:sequence>
-      <xs:element minOccurs="1" maxOccurs="1" name="Audience" type="xs:anyURI"/>
-    </xs:sequence>
-  </xs:complexType>
-
   <xs:complexType name="epLoadBalancer">
     <xs:all>
       <xs:element minOccurs="0" maxOccurs="1" name="Algorithm" type="epAlgorithm"/>
       <xs:element minOccurs="0" maxOccurs="1" name="MaxFailures" type="xs:integer"/>
       <xs:element minOccurs="0" maxOccurs="1" name="RetryEnabled" type='xs:boolean'/>
       <xs:element minOccurs="0" maxOccurs="1" name="TargetDisableSecs" type="xs:integer"/>
-      <xs:element minOccurs="1" maxOccurs="1" name="ServerUnhealthyResponse" type="epUnhealthyResponse"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="ServerUnhealthyResponse" type="epHTTPResponse"/>
       <xs:element minOccurs="1" maxOccurs="unbounded" name="Server" type="epServer"/>
     </xs:all>
   </xs:complexType>
@@ -100,6 +73,62 @@
     <xs:attribute name="name" use="required" type="xs:NCName"/>
   </xs:complexType>
 
+  <xs:complexType name="epHealthMonitor">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name="IntervalInSec" type="xs:integer"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="IsEnabled" type="xs:boolean"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="HTTPMonitor" type="epHTTPMonitor"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="TCPMonitor" type="epTCPMonitor"/>
+    </xs:all>
+    <xs:assert test="(count(HTTPMonitor) eq 1 and count(TCPMonitor) eq 0) or
+                     (count(HTTPMonitor) eq 0 and count(TCPMonitor) eq 1)"/>
+  </xs:complexType>
+
+  <xs:complexType name="epTCPMonitor">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name="ConnectTimeoutInSec" type="xs:integer"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Port" type="xs:integer"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="epHTTPMonitor">
+    <xs:all>
+      <xs:element minOccurs="1" maxOccurs="1" name="Request" type="epHTTPRequest"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="SuccessResponse" type="epHTTPResponse"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="epHTTPRequest">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name="Payload" type="xs:string"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="ConnectTimeoutInSec" type="xs:integer"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="SocketReadTimeoutInSec" type="xs:integer"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="UseTargetServerSSLInfo" type="xs:boolean"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Port" type="xs:integer"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="IncludeHealthCheckIdHeader" type="xs:boolean"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="IsSSL" type="xs:boolean"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="TrustAllSSL" type="xs:boolean"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="Verb" type="xs:string"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="Path" type="xs:string"/>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Header" type="epHTTPMonitorHeader"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="epHTTPMonitorHeader">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="epNonEmptyString" use='required'/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="epHTTPResponse">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Header" type="epHTTPMonitorHeader"/>
+      <xs:element minOccurs="1" maxOccurs="1" name="ResponseCode" type="xs:integer"/>
+    </xs:all>
+  </xs:complexType>
+
   <xs:complexType name="epSSLInfo">
     <xs:all>
       <xs:element minOccurs="0" maxOccurs="1" name="Enabled" type="xs:boolean"/>
@@ -118,7 +147,7 @@
 
   <xs:complexType name="epCommonName">
     <xs:simpleContent>
-      <xs:extension base="nonEmptyString">
+      <xs:extension base="epNonEmptyString">
         <xs:attribute name="wildcardMatch" type="xs:boolean"/>
       </xs:extension>
     </xs:simpleContent>

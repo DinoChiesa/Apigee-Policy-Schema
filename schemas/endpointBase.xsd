@@ -8,7 +8,7 @@
 
   <xs:complexType name='endpointBase'>
     <xs:all>
-      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="epDescription"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string"/>
       <xs:element minOccurs="0" maxOccurs="1" name="FaultRules" type="epFaultRules"/>
       <xs:element minOccurs="0" maxOccurs="1" name="DefaultFaultRule" type="epDefaultFaultRule"/>
       <xs:element minOccurs="0" maxOccurs="1" name="PreFlow" type="epPreOrPostFlow"/>
@@ -28,11 +28,13 @@
 
   <xs:complexType name="epDefaultFaultRule">
     <xs:all>
-      <xs:element name="Step" type="epStep"/>
-      <xs:element name="AlwaysEnforce" type="xs:boolean"/>
+      <xs:element minOccurs='0' maxOccurs='unbounded' name="Step" type="epStep"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="AlwaysEnforce" type="xs:boolean"/>
     </xs:all>
-    <xs:attribute name="name" type="xs:NCName"/>
+    <xs:attribute name="name" type="epNonEmptyString"/>
+    <!--
     <xs:assert test="count(AlwaysEnforce) le 1 and count(Step) ge 1"/>
+    -->
   </xs:complexType>
 
   <xs:complexType name="epProperties">
@@ -43,7 +45,7 @@
 
   <xs:complexType name="epProperty">
     <xs:simpleContent>
-      <xs:extension base="xs:boolean">
+      <xs:extension base="xs:string">
         <xs:attribute name="name" use="required" type="xs:NCName"/>
       </xs:extension>
     </xs:simpleContent>
@@ -51,18 +53,21 @@
 
   <xs:complexType name="epPreOrPostFlow">
     <xs:all>
-      <xs:element name="Request" type="epRequestOrResponse"/>
-      <xs:element name="Response" type="epRequestOrResponse"/>
+      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="Request" type="epRequestOrResponse"/>
+      <xs:element minOccurs='0' maxOccurs='1' name="Response" type="epRequestOrResponse"/>
     </xs:all>
-    <xs:attribute name="name" type="xs:NCName"/>
+    <xs:attribute name="name" type="xs:string"/> <!-- epNonEmptyString -->
+    <!--
     <xs:assert test="count(Response) le 1 and count(Request) le 1"/>
+    -->
   </xs:complexType>
 
   <xs:complexType name="epEventFlow">
     <xs:all>
-      <xs:element name="Response" type="epRequestOrResponse"/>
+      <xs:element minOccurs='1' maxOccurs='1' name="Response" type="epRequestOrResponse"/>
     </xs:all>
-    <xs:attribute name="name" use='required' type="xs:NCName"/>
+    <xs:attribute name="name" use='required' type="epNonEmptyString"/>
     <xs:attribute name="content-type" use='required' type="epNonEmptyString"/>
     <xs:assert test="count(Response) eq 1"/>
   </xs:complexType>
@@ -75,12 +80,14 @@
     <xs:assert test="count(Name) eq 1 and count(Condition) le 1"/>
   </xs:complexType>
 
+<!--
   <xs:simpleType name="epDescription">
     <xs:restriction base="xs:string"/>
   </xs:simpleType>
+-->
 
   <xs:simpleType name="epCondition">
-    <xs:restriction base="epNonEmptyString"/>
+    <xs:restriction base="xs:string"/> <!-- epNonEmptyString -->
   </xs:simpleType>
 
   <xs:complexType name="epRequestOrResponse">
@@ -100,7 +107,7 @@
       <xs:element minOccurs='0' name='Condition' type="epCondition"/>
       <xs:element minOccurs='1' maxOccurs='unbounded' name='Step' type="epStep"/>
     </xs:all>
-    <xs:attribute name="name" type='xs:NCName' use='required'/>
+    <xs:attribute name="name" type='epNonEmptyString'/>
     <xs:assert test="count(Condition) le 1 and count(Step) ge 1"/>
   </xs:complexType>
 
@@ -113,11 +120,11 @@
   <xs:complexType name="epFlow">
     <xs:all>
       <xs:element minOccurs='0' maxOccurs='1' name='Condition' type="epCondition"/>
-      <xs:element minOccurs='0' maxOccurs='1' name='Description' type="epDescription"/>
+      <xs:element minOccurs='0' maxOccurs='1' name='Description' type="xs:string"/>
       <xs:element minOccurs='0' maxOccurs='1' name='Request' type="epRequestOrResponse"/>
       <xs:element minOccurs='0' maxOccurs='1' name='Response' type="epRequestOrResponse"/>
     </xs:all>
-    <xs:attribute name="name" use="required" type="epNonEmptyString"/>
+    <xs:attribute name="name" type="epNonEmptyString"/>
   </xs:complexType>
 
   <xs:simpleType name="epNonEmptyString">

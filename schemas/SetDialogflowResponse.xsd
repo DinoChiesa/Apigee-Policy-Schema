@@ -62,7 +62,7 @@
 
   <xs:complexType name='sdfParameters'>
     <xs:sequence>
-      <xs:element maxOccurs="unbounded" ref="sdfParameter"/>
+      <xs:element maxOccurs="unbounded" name="Parameter" type="sdfParameter"/>
     </xs:sequence>
   </xs:complexType>
 
